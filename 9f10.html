@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>9F10 (IAD) Parser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --bg-color: #020617;
+  --text-color: #e5e7eb;
+  --card-bg: #0b1224;
+  --border-color: #1f2937;
+  --button-bg: #2563eb;
+  --error-color: #ef4444;
+}
+body {
+  margin: 0;
+  padding: 20px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: Consolas, "Courier New", monospace;
+  transition: background 0.3s, color 0.3s;
+}
+.light-mode {
+  --bg-color: #f9fafb;
+  --text-color: #111827;
+  --card-bg: #ffffff;
+  --border-color: #d1d5db;
+  --button-bg: #3b82f6;
+}
+.container { max-width: 1200px; margin: auto; }
+h1 { margin-bottom: 5px; }
+.subtitle { color: #9ca3af; margin-bottom: 20px; }
+.card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+input, button { padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; }
+button { background: var(--button-bg); font-weight: bold; cursor: pointer; margin-left: 10px; }
+button:hover { opacity: 0.9; }
+pre { background: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+.error { color: var(--error-color); }
+.flex { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>9F10 (IAD) Parser</h1>
+  <div class="subtitle">Complete RuPay / EMV Issuer Application Data Analyzer</div>
+
+  <div class="card">
+    <div class="flex">
+      <input id="hex" style="flex: 1;" placeholder="Paste full IAD hex string">
+      <button onclick="loadSample()">Load Sample</button>
+      <button onclick="parse9F10()">Parse</button>
+    </div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script>
+function parse9F10() {
+    const d = document.getElementById("hex").value.trim().toUpperCase();
+    const out = document.getElementById("out");
+    out.innerHTML = "";
+
+    if (!d) { out.innerHTML = "<div class='card error'>❌ Paste hex string first</div>"; return; }
+    if (d.length % 2 !== 0) { out.innerHTML = "<div class='card error'>❌ Hex string must have even length</div>"; return; }
+    if (!/^[0-9A-F]+$/.test(d)) { out.innerHTML = "<div class='card error'>❌ Invalid hex characters</div>"; return; }
+
+    let o = "";
+    const TAG = d.substr(0,4);
+    const LEN = d.substr(4,2);
+    const LENI = d.substr(6,2);
+    const CAII = d.substr(8,2);
+    const DKI = d.substr(10,2);
+    const CVR = d.substr(12,16);
+    const CTR = d.substr(28,28);
+    const IDD = d.substr(56,14);
+
+    function hexToBin(h) { return h.split('').map(x=>parseInt(x,16).toString(2).padStart(4,'0')).join(''); }
+
+    o += `<div class="card"><pre>
+TAG             : ${TAG}
+Length          : ${LEN}
+Length Indicator: ${LENI}
+
+CAII           : ${CAII} (bits: ${hexToBin(CAII)})
+  8-5 bits: ${hexToBin(CAII).substr(0,4)} — RuPay Version IAD Format (“B”)
+  4-1 bits: ${hexToBin(CAII).substr(4,4)} — Other
+
+DKI            : ${DKI}
+
+CVR (8 bytes)  : ${CVR}
+</pre></div>`;
+
+    const b = [];
+    for(let i=0;i<8;i++) b.push(hexToBin(CVR.substr(i*2,2)));
+
+    o += `<div class="card"><pre>
+[CVR b1]
+  Second Generate AC: ${b[0].substr(0,2)} — TC
+  First Generate AC : ${b[0].substr(2,2)} — ARQC
+  CDA performed     : ${b[0][4]}
+  qDDA signature    : ${b[0][5]}
+  IssuerAuth NOT perf.: ${b[0][6]}
+  IssuerAuth failed : ${b[0][7]}
+
+[CVR b2]
+  PIN Try Counter            : ${b[1].substr(0,4)}
+  Offline PIN performed      : ${b[1][4]}
+  Offline PIN not verified   : ${b[1][5]}
+  PIN Try limit exceeded     : ${b[1][6]}
+  Last Online Txn not comp.  : ${b[1][7]}
+
+[CVR b3]
+  ${b[2][0]} — IssuerAuth failed prev txn
+  ${b[2][1]} — IssuerAuth not performed after online auth prev
+  ${b[2][2]} — Go online on next txn
+  ${b[2][3]} — Balance limit exceeded
+  ${b[2][4]} — Additional check match
+  ${b[2][5]} — App blocked by issuer
+  ${b[2][6]} — Void mismatch
+  ${b[2][7]} — Unable to go online prev
+
+[CVR b4]
+  Script Counter (bits 8-5): ${b[3].substr(0,4)}
+  ${b[3][4]} — Script command fail
+  ${b[3][5]} — Offline Data Auth failed
+  ${b[3][6]} — RFU
+  ${b[3][7]} — Unable to go online
+
+[CVR b5]
+  ${b[4][0]} — Txn type not supported
+  ${b[4][1]} — RFU
+  ${b[4][2]} — Txn offline accepted
+  ${b[4][3]} — RFU
+  ${b[4][4]} — Service Key planted
+  ${b[4][5]} — Service Balance recvd
+  ${b[4][6]} — Void orig not found
+  ${b[4][7]} — Void orig expired
+
+[CVR b6]
+  ${b[5][0]} — Service not allowed
+  ${b[5][1]}

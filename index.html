@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EMV Field Decoder Toolkit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  background: #020617;
+  color: #e5e7eb;
+  font-family: Consolas, "Courier New", monospace;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+h1 { margin-bottom: 5px; }
+.subtitle { color: #9ca3af; margin-bottom: 20px; }
+
+.card {
+  background: #0b1224;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+input {
+  width: 75%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+button {
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #334155;
+}
+
+.hidden { display: none; }
+
+pre {
+  background: #020617;
+  border: 1px solid #1f2937;
+  padding: 12px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- HOME -->
+<div id="home">
+  <h1>EMV Decoder Toolkit</h1>
+  <div class="subtitle">Select EMV field to decode</div>
+
+  <div class="card">
+    <button onclick="showField60()">Field 60 Decoder</button>
+    <button onclick="show9F10()">9F10 (IAD / CVR) Decoder</button>
+  </div>
+</div>
+
+<!-- FIELD 60 -->
+<div id="field60" class="hidden">
+  <button class="secondary" onclick="goHome()">⬅ Back</button>
+  <h1>Field 60 Decoder</h1>
+  <div class="subtitle">ISO8583 Field 60 parser</div>
+
+  <div class="card">
+    <input id="f60hex" placeholder="Paste Field 60 hex string">
+    <button onclick="decodeField60()">Decode</button>
+  </div>
+
+  <div id="f60out"></div>
+</div>
+
+<!-- 9F10 -->
+<div id="f9f10" class="hidden">
+  <button class="secondary" onclick="goHome()">⬅ Back</button>
+  <h1>9F10 – Issuer Application Data</h1>
+  <div class="subtitle">Complete RuPay / EMV IAD & CVR Decoder</div>
+
+  <div class="card">
+    <input id="hex" placeholder="Paste full 9F10 hex string">
+    <button onclick="decode9F10()">Decode</button>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+</div>
+
+<script>
+/* NAV */
+function goHome() {
+  document.getElementById("home").classList.remove("hidden");
+  document.getElementById("field60").classList.add("hidden");
+  document.getElementById("f9f10").classList.add("hidden");
+}
+function showField60() {
+  goHome();
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("field60").classList.remove("hidden");
+}
+function show9F10() {
+  goHome();
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("f9f10").classList.remove("hidden");
+}
+
+/* UTIL */
+function hexToBin(h) {
+  return h.split('').map(x =>
+    parseInt(x,16).toString(2).padStart(4,'0')
+  ).join('');
+}
+
+/* FIELD 60 (basic placeholder parser) */
+function decodeField60() {
+  const d = document.getElementById("f60hex").value.trim();
+  if (!d) return;
+
+  let o = `<div class="card"><pre>
+Raw Field 60:
+${d}
+
+Length       : ${d.length / 2} bytes
+ASCII        : ${hexToAscii(d)}
+</pre></div>`;
+
+  document.getElementById("f60out").innerHTML = o;
+}
+
+function hexToAscii(hex) {
+  let s = "";
+  for (let i = 0; i < hex.length; i += 2) {
+    const c = parseInt(hex.substr(i, 2), 16);
+    s += (c >= 32 && c <= 126) ? String.fromCharCode(c) : ".";
+  }
+  return s;
+}
+
+/* 9F10 DECODER – YOUR LOGIC */
+function decode9F10() {
+  const d = document.getElementById("hex").value.trim();
+  let o = "";
+
+  const TAG = d.substr(0,4);
+  const LEN = d.substr(4,2);
+  const LENI = d.substr(6,2);
+  const CAII = d.substr(8,2);
+  const DKI = d.substr(10,2);
+  const CVR = d.substr(12,16);
+  const CTR = d.substr(28,28);
+  const IDD = d.substr(56,14);
+
+  o += `<div class="card"><pre>
+TAG             : ${TAG}
+Length          : ${LEN}
+Length Indicator: ${LENI}
+
+CAII           : ${CAII} (bits: ${hexToBin(CAII)})
+  8-5 bits: ${hexToBin(CAII).substr(0,4)} — RuPay IAD Format
+  4-1 bits: ${hexToBin(CAII).substr(4,4)}
+
+DKI            : ${DKI}
+CVR (8 bytes)  : ${CVR}
+</pre></div>`;
+
+  const b = [];
+  for(let i=0;i<8;i++) b.push(hexToBin(CVR.substr(i*2,2)));
+
+  o += `<div class="card"><pre>
+[CVR byte-1] ${b[0]}
+[CVR byte-2] ${b[1]}
+[CVR byte-3] ${b[2]}
+[CVR byte-4] ${b[3]}
+[CVR byte-5] ${b[4]}
+[CVR byte-6] ${b[5]}
+[CVR byte-7] ${b[6]}
+[CVR byte-8] ${b[7]}
+</pre></div>`;
+
+  o += `<div class="card"><pre>
+Counters:
+Global balance  : ${CTR.substr(0,12)}
+Service balance : ${CTR.substr(12,12)}
+
+IDD:
+Service ID      : ${IDD.substr(0,4)}
+Service Mgmt    : ${IDD.substr(4,4)}
+Service Ver     : ${IDD.substr(8,2)}
+Host Ver        : ${IDD.substr(10,2)}
+</pre></div>`;
+
+  document.getElementById("out").innerHTML = o;
+}
+</script>
+</body>
+</html>

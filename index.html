@@ -4,29 +4,42 @@
 <meta charset="UTF-8">
 <title>EMV Field 60 / 9F10 Parser</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body { background:#020617; color:#e5e7eb; font-family:Consolas, monospace; padding:20px; }
-textarea { width:100%; height:180px; background:#020617; color:#22c55e; border:1px solid #334155; padding:10px; font-family:monospace; margin-top:10px; }
-button { background:#2563eb; border:none; color:white; padding:10px 18px; margin:10px 0; border-radius:6px; cursor:pointer; }
-.card { background:#0b1224; border:1px solid #1f2937; border-radius:8px; padding:14px; margin-top:14px; }
-pre { white-space:pre-wrap; word-break:break-all; }
-.label { color:#38bdf8; }
-.ok { color:#22c55e; }
-.err { color:#f87171; }
-input[type=radio] { margin-right:4px; }
+body {
+  margin: 0;
+  padding: 20px;
+  background: #020617;
+  color: #e5e7eb;
+  font-family: Consolas, "Courier New", monospace;
+}
+
+.container { max-width: 1200px; margin: auto; }
+h1 { margin-bottom: 5px; }
+.subtitle { color: #9ca3af; margin-bottom: 20px; }
+.card { background: #0b1224; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+input, button { padding: 12px; border-radius: 8px; border: 1px solid #1f2937; background: #020617; color: #e5e7eb; font-size: 14px; }
+button { background: #2563eb; font-weight: bold; cursor: pointer; }
+pre { background: #020617; border: 1px solid #1f2937; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; }
+input[type=radio] { margin-right: 6px; }
 </style>
 </head>
+
 <body>
+<div class="container">
+  <h1>EMV Parser</h1>
+  <div class="subtitle">Choose Field 60 or 9F10 (IAD) Parser</div>
 
-<h2>EMV Parser: Field 60 / 9F10</h2>
+  <label><input type="radio" name="parser" value="f60" checked> Field 60 Parser</label>
+  <label><input type="radio" name="parser" value="9f10"> 9F10 (IAD) Parser</label>
 
-<label><input type="radio" name="parser" value="f60" checked> Field 60 Parser</label>
-<label><input type="radio" name="parser" value="9f10"> 9F10 (IAD) Parser</label>
+  <div class="card">
+    <input id="hex" style="width:75%" placeholder="Paste full hex string here...">
+    <button onclick="parseEMV()">Parse</button>
+  </div>
 
-<textarea id="emvhex" placeholder="Paste full hex string here..."></textarea>
-<br>
-<button onclick="parseEMV()">Parse</button>
-<div id="output"></div>
+  <div id="out"></div>
+</div>
 
 <script>
 // ---------------- HEX → ASCII
@@ -45,32 +58,32 @@ function parseField60(hex){
     let i=0, block=1;
 
     while(i < hex.length){
-        if(i+14>hex.length){ outDiv.push(`<div class="card err">❌ Incomplete header at block ${block}</div>`); break; }
+        if(i+14>hex.length){ outDiv.push(`<div class="card">❌ Incomplete header at block ${block}</div>`); break; }
 
         const version = hex.substr(i,4); i+=4;
         const blockId = hex.substr(i,4); i+=4;
         const tableId = hex.substr(i,2); i+=2;
         const lenStr  = hex.substr(i,4); i+=4;
 
-        const length = parseInt(lenStr,10); // decimal length
+        const length = parseInt(lenStr,16); // HEX length for Field 60
         const dataHexLen = length*2;
 
-        if(isNaN(length)){ outDiv.push(`<div class="card err">❌ Invalid length at block ${block}</div>`); break; }
-        if(i+dataHexLen>hex.length){ outDiv.push(`<div class="card err">❌ Length overflow at block ${block}</div>`); break; }
+        if(isNaN(length)){ outDiv.push(`<div class="card">❌ Invalid length at block ${block}</div>`); break; }
+        if(i+dataHexLen>hex.length){ outDiv.push(`<div class="card">❌ Length overflow at block ${block}</div>`); break; }
 
         const dataHex = hex.substr(i,dataHexLen); i+=dataHexLen;
         const ascii = hexToAscii(dataHex);
 
         outDiv.push(`<div class="card">
-<pre class="ok">
+<pre>
 Block ${block}
-<span class="label">Version:</span> ${version}
-<span class="label">Block ID:</span> ${blockId}
-<span class="label">Table ID:</span> ${tableId}
-<span class="label">Data Length:</span> ${length} bytes
-<span class="label">Data (HEX):</span>
+Version    : ${version}
+Block ID   : ${blockId}
+Table ID   : ${tableId}
+Data Length: ${length} bytes
+Data (HEX) :
 ${dataHex}
-<span class="label">Data (ASCII):</span>
+Data (ASCII):
 ${ascii}
 </pre></div>`);
 
@@ -79,61 +92,137 @@ ${ascii}
     return outDiv.join("");
 }
 
-// ---------------- 9F10 (IAD) PARSER
-function parse9F10(hex){
-    if(hex.length < 28) return `<div class="card err">❌ 9F10 hex too short</div>`;
-    let iad = hex;
+// ---------------- 9F10 (IAD) PARSER (UNCHANGED)
+function parse9F10(){
+  const d = document.getElementById("hex").value.trim();
+  let o = "";
 
-    const TAG = iad.substr(0,4);
-    const LEN = iad.substr(4,2);
-    const LENI = iad.substr(6,2);
-    const CAII = iad.substr(8,2);
-    const DKI = iad.substr(10,2);
-    const CVR = iad.substr(12,16);
-    const CTR = iad.substr(28,28);
-    const IDD = iad.substr(56,14);
+  const TAG = d.substr(0,4);
+  const LEN = d.substr(4,2);
+  const LENI = d.substr(6,2);
+  const CAII = d.substr(8,2);
+  const DKI = d.substr(10,2);
+  const CVR = d.substr(12,16);
+  const CTR = d.substr(28,28);
+  const IDD = d.substr(56,14);
 
-    function bin8(hexByte){ return parseInt(hexByte,16).toString(2).padStart(8,'0'); }
-    const b = []; for(let k=0;k<8;k++) b.push(bin8(CVR.substr(k*2,2)));
+  function hexToBin(h) { return h.split('').map(x=>parseInt(x,16).toString(2).padStart(4,'0')).join(''); }
 
-    return `<div class="card">
-<pre class="ok">
+  o += `<div class="card"><pre>
 TAG             : ${TAG}
 Length          : ${LEN}
 Length Indicator: ${LENI}
 
-CAII           : ${CAII} (bits: ${bin8(CAII)})
-  8-5 bits: ${bin8(CAII).substr(0,4)} — RuPay Version IAD Format
-  4-1 bits: ${bin8(CAII).substr(4,4)} — Other
+CAII           : ${CAII} (bits: ${hexToBin(CAII)})
+  8-5 bits: ${hexToBin(CAII).substr(0,4)} — RuPay Version IAD Format
+  4-1 bits: ${hexToBin(CAII).substr(4,4)} — Other
 
 DKI            : ${DKI}
 
 CVR (8 bytes)  : ${CVR}
-[CVR b1]  : ${b[0]}
-[CVR b2]  : ${b[1]}
-[CVR b3]  : ${b[2]}
-[CVR b4]  : ${b[3]}
-[CVR b5]  : ${b[4]}
-[CVR b6]  : ${b[5]}
-[CVR b7]  : ${b[6]}
-[CVR b8]  : ${b[7]}
-
-Counters (28-55): ${CTR}
-IDD (56-69): ${IDD}
 </pre></div>`;
+
+  const b = [];
+  for(let i=0;i<8;i++) b.push(hexToBin(CVR.substr(i*2,2)));
+
+  o += `<div class="card"><pre>
+[CVR b1]
+  Second Generate AC: ${b[0].substr(0,2)} — TC
+  First Generate AC : ${b[0].substr(2,2)} — ARQC
+  CDA performed     : ${b[0][4]}
+  qDDA signature    : ${b[0][5]}
+  IssuerAuth NOT perf.: ${b[0][6]}
+  IssuerAuth failed : ${b[0][7]}
+
+[CVR b2]
+  PIN Try Counter            : ${b[1].substr(0,4)}
+  Offline PIN performed      : ${b[1][4]}
+  Offline PIN not verified   : ${b[1][5]}
+  PIN Try limit exceeded     : ${b[1][6]}
+  Last Online Txn not comp.  : ${b[1][7]}
+
+[CVR b3]
+  ${b[2][0]} — IssuerAuth failed prev txn
+  ${b[2][1]} — IssuerAuth not performed after online auth prev
+  ${b[2][2]} — Go online on next txn
+  ${b[2][3]} — Balance limit exceeded
+  ${b[2][4]} — Additional check match
+  ${b[2][5]} — App blocked by issuer
+  ${b[2][6]} — Void mismatch
+  ${b[2][7]} — Unable to go online prev
+
+[CVR b4]
+  Script Counter (bits 8-5): ${b[3].substr(0,4)}
+  ${b[3][4]} — Script command fail
+  ${b[3][5]} — Offline Data Auth failed
+  ${b[3][6]} — RFU
+  ${b[3][7]} — Unable to go online
+
+[CVR b5]
+  ${b[4][0]} — Txn type not supported
+  ${b[4][1]} — RFU
+  ${b[4][2]} — Txn offline accepted
+  ${b[4][3]} — RFU
+  ${b[4][4]} — Service Key planted
+  ${b[4][5]} — Service Balance recvd
+  ${b[4][6]} — Void orig not found
+  ${b[4][7]} — Void orig expired
+
+[CVR b6]
+  ${b[5][0]} — Service not allowed
+  ${b[5][1]} — New Service Creation
+  ${b[5][2]} — Service reallocation
+  ${b[5][3]} — Txn initiated w/ Service
+  ${b[5][4]} — Service update failed
+  ${b[5][5]} — Service updated
+  ${b[5][6]} — Service created global wallet
+  ${b[5][7]} — Service Process skipped
+
+[CVR b7]
+  ${b[6][0]} — Offline Balance insufficient
+  ${b[6][1]} — CVM Limit exceeded
+  ${b[6][2]} — Invalid Void Transaction
+  ${b[6].substr(3,5)} — RFU
+
+[CVR b8]
+  ${b[7][0]} — Service Signature failed
+  ${b[7][1]} — Service Summary failed
+  ${b[7][2]} — Critical Service Update
+  ${b[7][3]} — Offline Spending Limit exceeded
+  ${b[7][4]} — Offline Txn Limit exceeded
+  ${b[7][5]} — RFU
+  ${b[7][6]} — Txn date format incorrect
+  ${b[7][7]} — Txn time format incorrect
+</pre></div>`;
+
+  o += `<div class="card"><pre>
+Counters (28-55): ${CTR}
+  Global balance   : ${CTR.substr(0,12)}
+  Service balance  : ${CTR.substr(12,12)}
+  RFU              : ${CTR.substr(24,4)}
+
+IDD (56-69): ${IDD}
+  Service ID                   : ${IDD.substr(0,4)}
+  Service Management Info      : ${IDD.substr(4,4)}
+  Service Compatibility Ver    : ${IDD.substr(8,2)}
+  Host Compatibility Ver       : ${IDD.substr(10,2)}
+  RFU                          : ${IDD.substr(12,2)}
+</pre></div>`;
+
+  return o;
 }
 
-// ---------------- MAIN PARSER
+// ---------------- MAIN
 function parseEMV(){
-    const hex = document.getElementById("emvhex").value.trim().toUpperCase();
-    const type = document.querySelector('input[name="parser"]:checked').value;
-    const out = document.getElementById("output");
-    out.innerHTML = "";
+  const hex = document.getElementById("hex").value.trim();
+  const type = document.querySelector('input[name="parser"]:checked').value;
+  const out = document.getElementById("out");
+  out.innerHTML = "";
 
-    if(hex.length === 0){ out.innerHTML = `<div class="card err">❌ Paste hex string first</div>`; return; }
+  if(hex.length===0){ out.innerHTML="<div class='card'>❌ Paste hex string first</div>"; return; }
 
-    if(type==='f60') out.innerHTML = parseField60(hex);
-    else if(type==='9f10') out.innerHTML = parse9F10(hex);
+  if(type==='f60') out.innerHTML = parseField60(hex);
+  else if(type==='9f10') out.innerHTML = parse9F10();
 }
 </script>
 </body>

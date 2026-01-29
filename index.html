@@ -4,38 +4,67 @@
 <meta charset="UTF-8">
 <title>EMV Field 60 / 9F10 Parser</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
+:root {
+  --bg-color: #020617;
+  --text-color: #e5e7eb;
+  --card-bg: #0b1224;
+  --border-color: #1f2937;
+  --button-bg: #2563eb;
+  --error-color: #ef4444;
+}
+
 body {
   margin: 0;
   padding: 20px;
-  background: #020617;
-  color: #e5e7eb;
+  background: var(--bg-color);
+  color: var(--text-color);
   font-family: Consolas, "Courier New", monospace;
+  transition: background 0.3s, color 0.3s;
+}
+
+.light-mode {
+  --bg-color: #f9fafb;
+  --text-color: #111827;
+  --card-bg: #ffffff;
+  --border-color: #d1d5db;
+  --button-bg: #3b82f6;
 }
 
 .container { max-width: 1200px; margin: auto; }
 h1 { margin-bottom: 5px; }
 .subtitle { color: #9ca3af; margin-bottom: 20px; }
-.card { background: #0b1224; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-input, button { padding: 12px; border-radius: 8px; border: 1px solid #1f2937; background: #020617; color: #e5e7eb; font-size: 14px; }
-button { background: #2563eb; font-weight: bold; cursor: pointer; }
-pre { background: #020617; border: 1px solid #1f2937; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; }
+.card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+input, button { padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; }
+button { background: var(--button-bg); font-weight: bold; cursor: pointer; margin-left: 10px; }
+button:hover { opacity: 0.9; }
+pre { background: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
 input[type=radio] { margin-right: 6px; }
+.error { color: var(--error-color); }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid var(--border-color); padding: 6px; font-family: monospace; vertical-align: top; }
+th { background: var(--card-bg); }
+.ascii { white-space: pre-wrap; }
+.flex { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 </style>
 </head>
-
 <body>
 <div class="container">
   <h1>EMV Parser</h1>
   <div class="subtitle">Choose Field 60 or 9F10 (IAD) Parser</div>
 
-  <label><input type="radio" name="parser" value="f60" checked> Field 60 Parser</label>
-  <label><input type="radio" name="parser" value="9f10"> 9F10 (IAD) Parser</label>
+  <div class="flex">
+    <label><input type="radio" name="parser" value="f60" checked> Field 60 Parser</label>
+    <label><input type="radio" name="parser" value="9f10"> 9F10 (IAD) Parser</label>
+    <button onclick="toggleTheme()">Toggle Theme</button>
+  </div>
 
   <div class="card">
-    <input id="hex" style="width:75%" placeholder="Paste full hex string here...">
-    <button onclick="parseEMV()">Parse</button>
+    <div class="flex">
+      <input id="hex" style="flex: 1;" placeholder="Paste full hex string here...">
+      <button onclick="loadSample()">Load Sample</button>
+      <button onclick="parseEMV()">Parse</button>
+    </div>
   </div>
 
   <div id="out"></div>
@@ -52,47 +81,75 @@ function hexToAscii(hex) {
     return out;
 }
 
-// ---------------- FIELD 60 PARSER
+// ---------------- FIELD 60 PARSER (DECIMAL LENGTH, TABLE OUTPUT)
 function parseField60(hex){
-    const outDiv = [];
-    let i=0, block=1;
+    let tableHtml = `<table>
+<thead>
+<tr>
+    <th>#</th>
+    <th>Version</th>
+    <th>Data Block</th>
+    <th>Table ID</th>
+    <th>Length (bytes)</th>
+    <th>Actual Data (HEX)</th>
+    <th>Actual Data (ASCII)</th>
+</tr>
+</thead>
+<tbody>`;
 
-    while(i < hex.length){
-        if(i+14>hex.length){ outDiv.push(`<div class="card">❌ Incomplete header at block ${block}</div>`); break; }
+    let i = 0;
+    let block = 1;
 
-        const version = hex.substr(i,4); i+=4;
-        const blockId = hex.substr(i,4); i+=4;
-        const tableId = hex.substr(i,2); i+=2;
-        const lenStr  = hex.substr(i,4); i+=4;
+    while (i < hex.length) {
+        if (i + 14 > hex.length) {
+            tableHtml += `<tr><td colspan="7" class="error">❌ Incomplete block at position ${i}</td></tr>`;
+            break;
+        }
 
-        const length = parseInt(lenStr,16); // HEX length for Field 60
-        const dataHexLen = length*2;
+        const version = hex.substr(i, 4); i += 4;
+        const dataBlock = hex.substr(i, 4); i += 4;
+        const tableId = hex.substr(i, 2); i += 2;
 
-        if(isNaN(length)){ outDiv.push(`<div class="card">❌ Invalid length at block ${block}</div>`); break; }
-        if(i+dataHexLen>hex.length){ outDiv.push(`<div class="card">❌ Length overflow at block ${block}</div>`); break; }
+        const lenStr = hex.substr(i, 4);
+        const length = parseInt(lenStr, 10); // ✅ DECIMAL length
+        i += 4;
 
-        const dataHex = hex.substr(i,dataHexLen); i+=dataHexLen;
+        if (isNaN(length)) {
+            tableHtml += `<tr><td colspan="7" class="error">❌ Invalid length at block ${block}</td></tr>`;
+            break;
+        }
+
+        const dataHexLen = length * 2;
+
+        if (i + dataHexLen > hex.length) {
+            tableHtml += `<tr><td colspan="7" class="error">❌ Length overflow at block ${block}</td></tr>`;
+            break;
+        }
+
+        const dataHex = hex.substr(i, dataHexLen);
+        i += dataHexLen;
+
         const ascii = hexToAscii(dataHex);
 
-        outDiv.push(`<div class="card">
-<pre>
-Block ${block}
-Version    : ${version}
-Block ID   : ${blockId}
-Table ID   : ${tableId}
-Data Length: ${length} bytes
-Data (HEX) :
-${dataHex}
-Data (ASCII):
-${ascii}
-</pre></div>`);
+        tableHtml += `
+            <tr>
+                <td>${block}</td>
+                <td>${version}</td>
+                <td>${dataBlock}</td>
+                <td>${tableId}</td>
+                <td>${length}</td>
+                <td>${dataHex}</td>
+                <td class="ascii">${ascii}</td>
+            </tr>`;
 
         block++;
     }
-    return outDiv.join("");
+
+    tableHtml += `</tbody></table>`;
+    return tableHtml;
 }
 
-// ---------------- 9F10 (IAD) PARSER (UNCHANGED)
+// ---------------- 9F10 (IAD) PARSER (UPDATED TO NEW LOGIC)
 function parse9F10(){
   const d = document.getElementById("hex").value.trim();
   let o = "";
@@ -114,7 +171,7 @@ Length          : ${LEN}
 Length Indicator: ${LENI}
 
 CAII           : ${CAII} (bits: ${hexToBin(CAII)})
-  8-5 bits: ${hexToBin(CAII).substr(0,4)} — RuPay Version IAD Format
+  8-5 bits: ${hexToBin(CAII).substr(0,4)} — RuPay Version IAD Format (“B”)
   4-1 bits: ${hexToBin(CAII).substr(4,4)} — Other
 
 DKI            : ${DKI}
@@ -219,10 +276,29 @@ function parseEMV(){
   const out = document.getElementById("out");
   out.innerHTML = "";
 
-  if(hex.length===0){ out.innerHTML="<div class='card'>❌ Paste hex string first</div>"; return; }
+  if(hex.length===0){ out.innerHTML="<div class='card error'>❌ Paste hex string first</div>"; return; }
+  if(hex.length % 2 !== 0){ out.innerHTML="<div class='card error'>❌ Hex string must have even length</div>"; return; }
+  if(!/^[0-9a-fA-F]+$/.test(hex)){ out.innerHTML="<div class='card error'>❌ Invalid hex characters</div>"; return; }
 
-  if(type==='f60') out.innerHTML = parseField60(hex);
-  else if(type==='9f10') out.innerHTML = parse9F10();
+  let result = "";
+  if(type==='f60') result = parseField60(hex);
+  else if(type==='9f10') result = parse9F10();
+
+  out.innerHTML = result + '<button onclick="copyOutput()">Copy Output</button>';
+}
+
+// ---------------- NEW FUNCTIONS
+function loadSample(){
+  document.getElementById("hex").value = "000101010101873132303030303030303030303030313639383650756E65204D6574726F205465737420312020202020204B4F524547414F4E205041524B4D48494E4B4F524547414F4E205041524B20202020202020202020202020202020202020202020202020202031535420464C4F4F522C20544845204F52494F4E2E204B4F524547414F4E205041524B20524F41444B4F524547414F4E205041524B2C31535420464C4F4F522C20544845204F52494F4E2E204B4F524500000098732925980001010102007000020181742300008174239999484446435F52757061795F436C617373696320200100000181742300008174239999484446435F52757061795F436C6173736963202001000000020101050100010007A000000152301044696E6572732020202020202020202020202020200002039F3704039F0802FC5080A0000000000000F85080F8000000000000050000000027100000000000000000000000000000000000000500000000000500000000000500000001010111001100150000001230006023000001010114001001000001010001010000";
+}
+
+function toggleTheme(){
+  document.body.classList.toggle('light-mode');
+}
+
+function copyOutput(){
+  const output = document.getElementById("out").innerText;
+  navigator.clipboard.writeText(output).then(() => alert("Output copied to clipboard!"));
 }
 </script>
 </body>

@@ -140,4 +140,51 @@ CVR (8 bytes)  : ${CVR}
 
 [CVR b6]
   ${b[5][0]} — Service not allowed
-  ${b[5][1]}
+  ${b[5][1]} — New Service Creation
+  ${b[5][2]} — Service reallocation
+  ${b[5][3]} — Txn initiated w/ Service
+  ${b[5][4]} — Service update failed
+  ${b[5][5]} — Service updated
+  ${b[5][6]} — Service created global wallet
+  ${b[5][7]} — Service Process skipped
+
+[CVR b7]
+  ${b[6][0]} — Offline Balance insufficient
+  ${b[6][1]} — CVM Limit exceeded
+  ${b[6][2]} — Invalid Void Transaction
+  ${b[6].substr(3,5)} — RFU
+
+[CVR b8]
+  ${b[7][0]} — Service Signature failed
+  ${b[7][1]} — Service Summary failed
+  ${b[7][2]} — Critical Service Update
+  ${b[7][3]} — Offline Spending Limit exceeded
+  ${b[7][4]} — Offline Txn Limit exceeded
+  ${b[7][5]} — RFU
+  ${b[7][6]} — Txn date format incorrect
+  ${b[7][7]} — Txn time format incorrect
+</pre></div>`;
+
+    o += `<div class="card"><pre>
+Counters (28-55): ${CTR}
+  Global balance   : ${CTR.substr(0,12)}
+  Service balance  : ${CTR.substr(12,12)}
+  RFU              : ${CTR.substr(24,4)}
+
+IDD (56-69): ${IDD}
+  Service ID                   : ${IDD.substr(0,4)}
+  Service Management Info      : ${IDD.substr(4,4)}
+  Service Compatibility Ver    : ${IDD.substr(8,2)}
+  Host Compatibility Ver       : ${IDD.substr(10,2)}
+  RFU                          : ${IDD.substr(12,2)}
+</pre></div>`;
+
+    out.innerHTML = o;
+}
+
+function loadSample() {
+    document.getElementById("hex").value = "000101010101873132303030303030303030303030313639383650756E65204D6574726F205465737420312020202020204B4F524547414F4E205041524B4D48494E4B4F524547414F4E205041524B20202020202020202020202020202020202020202020202020202031535420464C4F4F522C20544845204F52494F4E2E204B4F524547414F4E205041524B20524F41444B4F524547414F4E205041524B2C31535420464C4F4F522C20544845204F52494F4E2E204B4F524500000098732925980001010102007000020181742300008174239999484446435F52757061795F436C617373696320200100000181742300008174239999484446435F52757061795F436C6173736963202001000000020101050100010007A000000152301044696E6572732020202020202020202020202020200002039F3704039F0802FC5080A0000000000000F85080F8000000000000050000000027100000000000000000000000000000000000000500000000000500000000000500000001010111001100150000001230006023000001010114001001000001010001010000";
+}
+</script>
+</body>
+</html>

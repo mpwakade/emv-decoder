@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Field 60 Parser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --bg-color: #020617;
+  --text-color: #e5e7eb;
+  --card-bg: #0b1224;
+  --border-color: #1f2937;
+  --button-bg: #2563eb;
+  --error-color: #ef4444;
+}
+body {
+  margin: 0;
+  padding: 20px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: Consolas, "Courier New", monospace;
+  transition: background 0.3s, color 0.3s;
+}
+.light-mode {
+  --bg-color: #f9fafb;
+  --text-color: #111827;
+  --card-bg: #ffffff;
+  --border-color: #d1d5db;
+  --button-bg: #3b82f6;
+}
+.container { max-width: 1200px; margin: auto; }
+h1 { margin-bottom: 5px; }
+.subtitle { color: #9ca3af; margin-bottom: 20px; }
+.card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+input, button { padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 14px; }
+button { background: var(--button-bg); font-weight: bold; cursor: pointer; margin-left: 10px; }
+button:hover { opacity: 0.9; }
+pre { background: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+.error { color: var(--error-color); }
+.list { list-style: none; padding: 0; }
+.list li { margin-bottom: 10px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); }
+.list li h4 { margin: 0 0 10px 0; }
+.list li ul { list-style: none; padding-left: 20px; }
+.list li ul li { margin-bottom: 5px; padding: 0; border: none; background: none; }
+.ascii { white-space: pre-wrap; font-family: monospace; }
+.flex { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Field 60 Parser</h1>
+  <div class="subtitle">Decimal Length Parser with List Output</div>
+
+  <div class="card">
+    <div class="flex">
+      <input id="hex" style="flex: 1;" placeholder="Paste full hex string here...">
+      <button onclick="loadSample()">Load Sample</button>
+      <button onclick="parseF60()">Parse</button>
+    </div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script>
+function hexToAscii(hex) {
+    let out = "";
+    for (let i = 0; i < hex.length; i += 2) {
+        const byte = parseInt(hex.substr(i,2),16);
+        out += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
+    }
+    return out;
+}
+
+function parseF60() {
+    const hex = document.getElementById("hex").value.trim().toUpperCase();
+    const out = document.getElementById("out");
+    out.innerHTML = "";
+
+    if (!hex) { out.innerHTML = "<div class='card error'>❌ Paste hex string first</div>"; return; }
+    if (hex.length % 2 !== 0) { out.innerHTML = "<div class='card error'>❌ Hex string must have even length</div>"; return; }
+    if (!/^[0-9A-F]+$/.test(hex)) { out.innerHTML = "<div class='card error'>❌ Invalid hex characters</div>"; return; }
+
+    let listHtml = '<ul class="list">';
+    let i = 0, block = 1;
+
+    while (i < hex.length) {
+        if (i + 14 > hex.length) {
+            listHtml += `<li class="error">❌ Incomplete block at position ${i}</li>`;
+            break;
+        }
+        const version = hex.substr(i, 4); i += 4;
+        const dataBlock = hex.substr(i, 4); i += 4;
+        const tableId = hex.substr(i, 2); i += 2;
+        const lenStr = hex.substr(i, 4);
+        const length = parseInt(lenStr, 10); i += 4;
+        if (isNaN(length)) {
+            listHtml += `<li class="error">❌ Invalid length at block ${block}</li>`;
+            break;
+        }
+        const dataHexLen = length * 2;
+        if (i + dataHexLen > hex.length) {
+            listHtml += `<li class="error">❌ Length overflow at block ${block}</li>`;
+            break;
+        }
+        const dataHex = hex.substr(i, dataHexLen); i += dataHexLen;
+        const ascii = hexToAscii(dataHex);
+        listHtml += `
+            <li>
+                <h4>Block ${block}</h4>
+                <ul>
+                    <li>Version: ${version}</li>
+                    <li>Data Block: ${dataBlock}</li>
+                    <li>Table ID: ${tableId}</li>
+                    <li>Length (bytes): ${length}</li>
+                    <li>Actual Data (HEX): ${dataHex}</li>
+                    <li>Actual Data (ASCII): <span class="ascii">${ascii}</span></li>
+                </ul>
+            </li>`;
+        block++;
+    }
+    listHtml += '</ul>';
+    out.innerHTML = listHtml + '<button onclick="copyOutput()">Copy Output</button>';
+}
+
+function loadSample() {
+    document.getElementById("hex").value = "000101010101873132303030303030303030303030313639383650756E65204D6574726F205465737420312020202020204B4F524547414F4E205041524B4D48494E4B4F524547414F4E205041524B20202020202020202020202020202020202020202020202020202031535420464C4F4F522C20544845204F52494F4E2E204B4F524547414F4E205041524B20524F41444B4F524547414F4E205041524B2C31535420464C4F4F522C20544845204F52494F4E2E204B4F524500000098732925980001010102007000020181742300008174239999484446435F52757061795F436C617373696320200100000181742300008174239999484446435F52757061795F436C6173736963202001000000020101050100010007A000000152301044696E6572732020202020202020202020202020200002039F3704039F0802FC5080A0000000000000F85080F8000000000000050000000027100000000000000000000000000000000000000500000000000500000000000500000001010111001100150000001230006023000001010114001001000001010001010000";
+}
+
+function copyOutput() {
+    const output = document.getElementById("out").innerText;
+    navigator.clipboard.writeText(output).then(() => alert("Output copied to clipboard!"));
+}
+</script>
+</body>
+</html>

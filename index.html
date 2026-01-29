@@ -2,56 +2,382 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>EMV Parser Hub</title>
+<title>EMV Parser Hub - Professional EMV Data Analysis</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body {
+* {
   margin: 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #020617, #0b1224);
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0a0f1e 0%, #1a1f35 50%, #0f1424 100%);
   color: #e5e7eb;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  text-align: center;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow-x: hidden;
 }
+
+/* Animated background particles */
+body::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+  animation: pulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 .container {
-  max-width: 600px;
-  background: rgba(11, 18, 36, 0.9);
-  border: 1px solid #1f2937;
-  border-radius: 15px;
-  padding: 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  max-width: 900px;
+  width: 100%;
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  border-radius: 24px;
+  padding: 60px 40px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  position: relative;
+  z-index: 1;
 }
-h1 { margin-bottom: 10px; font-size: 2.5em; }
-.subtitle { color: #9ca3af; margin-bottom: 30px; }
-.button {
-  display: inline-block;
-  padding: 15px 30px;
-  margin: 10px;
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 1.2em;
-  cursor: pointer;
-  transition: all 0.3s;
+
+/* Header section */
+.header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.logo svg {
+  width: 45px;
+  height: 45px;
+  stroke: white;
+  fill: none;
+  stroke-width: 2;
+}
+
+h1 {
+  font-size: 3em;
+  font-weight: 700;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #ffffff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 1.15em;
+  color: #9ca3af;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* Parser grid */
+.parser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.parser-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(17, 24, 39, 0.6));
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  border-radius: 16px;
+  padding: 30px 24px;
   text-decoration: none;
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  cursor: pointer;
 }
-.button:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4); }
+
+.parser-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.parser-card:hover::before {
+  transform: scaleX(1);
+}
+
+.parser-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(99, 102, 241, 0.3) inset;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(17, 24, 39, 0.8));
+}
+
+.card-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.parser-card:hover .card-icon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
+  transform: scale(1.1) rotate(5deg);
+}
+
+.card-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: #60a5fa;
+  fill: none;
+  stroke-width: 2;
+}
+
+.card-title {
+  font-size: 1.3em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #f3f4f6;
+}
+
+.card-description {
+  font-size: 0.95em;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.card-tag {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 12px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  font-size: 0.8em;
+  color: #93c5fd;
+  font-weight: 500;
+}
+
+/* Info section */
+.info-section {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.info-section h2 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #e5e7eb;
+}
+
+.info-section p {
+  color: #9ca3af;
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+
+.features {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9ca3af;
+  font-size: 0.9em;
+}
+
+.feature-item svg {
+  width: 18px;
+  height: 18px;
+  stroke: #10b981;
+  fill: none;
+  stroke-width: 2;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 40px 24px;
+  }
+  
+  h1 {
+    font-size: 2.2em;
+  }
+  
+  .subtitle {
+    font-size: 1em;
+  }
+  
+  .parser-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .features {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+/* Accessibility improvements */
+.parser-card:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.parser-card:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Loading animation */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>EMV Parser Hub</h1>
-  <p class="subtitle">Choose a parser to analyze EMV data</p>
-  <a href="f60.html" class="button" target="_blank">Field 60 Parser</a>
-  <a href="9f10.html" class="button" target="_blank">9F10 (IAD) Parser</a>
-  <a href="osa.html" class="button" target="_blank">OSA Parser</a>
-  <a href="table17.html" class="button" target="_blank">Table 17 Parser</a>
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24">
+        <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1>EMV Parser Hub</h1>
+    <p class="subtitle">Professional EMV data analysis and parsing tools</p>
+  </div>
+
+  <div class="parser-grid">
+    <a href="f60.html" class="parser-card" target="_blank">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="card-title">Field 60 Parser</div>
+      <div class="card-description">Parse and analyze ISO 8583 Field 60 private data elements</div>
+      <span class="card-tag">ISO 8583</span>
+    </a>
+
+    <a href="9f10.html" class="parser-card" target="_blank">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="card-title">9F10 (IAD) Parser</div>
+      <div class="card-description">Decode Issuer Application Data for EMV transactions</div>
+      <span class="card-tag">EMV IAD</span>
+    </a>
+
+    <a href="osa.html" class="parser-card" target="_blank">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="card-title">OSA Parser</div>
+      <div class="card-description">Analyze Online Security Algorithm data structures</div>
+      <span class="card-tag">Security</span>
+    </a>
+
+    <a href="table17.html" class="parser-card" target="_blank">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="card-title">Table 17 Parser</div>
+      <div class="card-description">Parse EMV Table 17 cryptogram information data</div>
+      <span class="card-tag">Cryptogram</span>
+    </a>
+  </div>
+
+  <div class="info-section">
+    <h2>Why Choose Our Parsers?</h2>
+    <p>Industry-standard tools designed for accuracy, speed, and ease of use in EMV data analysis</p>
+    <div class="features">
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Instant Results</span>
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Detailed Analysis</span>
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Easy to Use</span>
+      </div>
+    </div>
+  </div>
 </div>
 </body>
 </html>

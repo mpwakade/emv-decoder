@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OSA Parser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+textarea {
+    width: 100%;
+    height: 180px;
+    font-family: monospace;
+    font-size: 14px;
+}
+button {
+    margin-top: 10px;
+    padding: 8px 16px;
+}
+ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+li {
+    padding: 5px 0;
+    border-bottom: 1px solid #ccc;
+    font-family: monospace;
+}
+</style>
+</head>
+<body>
+<h2>OSA Parser</h2>
+<textarea id="input" placeholder="Paste full OSA hex string here..."></textarea>
+<br>
+<button onclick="loadSample()">Load Sample</button>
+<button onclick="parseOSA()">Parse</button>
+<ul id="output" style="display:none"></ul>
+<script>
+function parseData(input) {
+  const parsed = [
+    "versionNo" + input.substring(0, 7 + 1),         // Index 2 to 4 (exclusive of 4 + 1)
+    "langInfo:" + input.substring(8, 12 + 1),    // Index 5 to 8 (exclusive of 8 + 1)
+    "unknown:" + input.substring(13,14 + 1),
+    "unknown:" + input.substring(14,15 + 1),
+
+    "unknown:" + input.substring(16,23 + 1),
+    "unknown:" + input.substring(24,31 + 1),
+    "unknown:" + input.substring(32,55 + 1),
+    "unknown:" + input.substring(56,71 + 1),
+    "unknown:" + input.substring(72,87 + 1),
+    "unknown:" + input.substring(88,111 + 1),
+    "unknown:" + input.substring(112,115 + 1),
+    "unknown:" + input.substring(116,119 + 1),
+    "unknown:" + input.substring(120,127 + 1),
+    "unknown:" + input.substring(128,143 + 1),
+    "unknown:" + input.substring(144,155 + 1),
+    "unknown:" + input.substring(156,161 + 1),
+    "unknown:" + input.substring(162,167 + 1),
+    "unknown:" + input.substring(168,191 + 1),
+    "unknown:" + input.substring(192,207 + 1),
+    "unknown:" + input.substring(208,223 + 1),
+    "unknown:" + input.substring(224,243 + 1),
+    "unknown:" + input.substring(244,247 + 1),
+
+    "Product Type: " + input.substring(248, 255 + 1),
+    "RFU1: " + input.substring(256, 263 + 1),
+    "Acquirer ID: " + input.substring(264, 271 + 1),
+    "Operator ID: " + input.substring(272, 287 + 1),
+    "Terminal ID: " + input.substring(288, 299 + 1),
+    "Device Category: " + input.substring(300, 305 + 1),
+    "Device Number: " + input.substring(306, 311 + 1),
+    "Transaction Date & Time: " + input.substring(312, 335 + 1),
+    "Transaction Sequence No.: " + input.substring(336, 351 + 1),
+    "Transaction Amount: " + input.substring(352, 367 + 1),
+    "Card Balance/Limit: " + input.substring(368, 387 + 1),
+    "Transaction Status: " + input.substring(388, 391 + 1),
+    "Product Type 2: " + input.substring(392, 399 + 1),
+    "RFU2: " + input.substring(400, 407 + 1),
+    "Metro Product Type: " + input.substring(408, 415 + 1),
+    "Metro Pass Limit/Trips: " + input.substring(416, 423 + 1),
+    "Metro Activation Date: " + input.substring(424, 447 + 1),
+    "Metro Expiry Date: " + input.substring(448, 463 + 1),
+    "Metro Valid Route/Zone: " + input.substring(464, 473 + 1),
+    "Metro Entry Station ID: " + input.substring(474, 483 + 1),
+    "Metro Exit Station ID: " + input.substring(484, 493 + 1),
+    "Metro Bonus Amount/Trip: " + input.substring(494, 503 + 1),
+    "Metro Class/Privileges: " + input.substring(504, 505 + 1),
+    "Metro Daily Limit: " + input.substring(506, 511 + 1),
+    "Metro RFU: " + input.substring(512, 527 + 1),
+    "Bus Product Type: " + input.substring(528, 535 + 1),
+    "Bus Pass Limit/Trips: " + input.substring(536, 543 + 1),
+    "Bus Activation Date: " + input.substring(544, 567 + 1),
+    "Bus Expiry Date: " + input.substring(568, 583 + 1),
+    "Bus Valid Route/Zone: " + input.substring(584, 593 + 1),
+    "Bus Entry Station ID: " + input.substring(594, 603 + 1),
+    "Bus Exit Station ID: " + input.substring(604, 613 + 1),
+    "Bus Bonus Amount/Trip: " + input.substring(614, 623 + 1),
+    "Bus Class/Privileges: " + input.substring(624, 625 + 1),
+    "Bus Daily Limit: " + input.substring(626, 629 + 1),
+    "Bus RFU: " + input.substring(630, 647 + 1),
+    "Parking Product Type: " + input.substring(648, 655 + 1),
+    "Parking Pass Limit/Trips: " + input.substring(656, 663 + 1),
+    "Parking Activation Date: " + input.substring(664, 687 + 1),
+    "Parking Expiry Date: " + input.substring(688, 703 + 1),
+    "Parking Zone/Station: " + input.substring(704, 713 + 1),
+    "Parking Class/Privileges: " + input.substring(714, 715 + 1),
+    "Parking Daily Limit: " + input.substring(716, 719 + 1),
+    "Vehicle Number: " + input.substring(720, 759 + 1),
+    "Parking RFU: " + input.substring(760, 767 + 1)
+
+    
+  ];
+
+  return parsed;
+}
+
+function cncat(input) {
+
+  let s = 
+  input.substring(0, 7 + 1) +
+  input.substring(8, 12 + 1) +
+  input.substring(13, 14 + 1) +
+  input.substring(14, 15 + 1) +
+  input.substring(16, 23 + 1) +
+  input.substring(24, 31 + 1) +
+  input.substring(32, 55 + 1) +
+  input.substring(56, 71 + 1) +
+  input.substring(72, 87 + 1) +
+  input.substring(88, 111 + 1) +
+  input.substring(112, 115 + 1) +
+  input.substring(116, 119 + 1) +
+  input.substring(120, 127 + 1) +
+  input.substring(128, 143 + 1) +
+  input.substring(144, 155 + 1) +
+  input.substring(156, 161 + 1) +
+  input.substring(162, 167 + 1) +
+  input.substring(168, 191 + 1) +
+  input.substring(192, 207 + 1) +
+  input.substring(208, 223 + 1) +
+  input.substring(224, 243 + 1) +
+  input.substring(244, 247 + 1) +
+  input.substring(248, 255 + 1) +
+  input.substring(256, 263 + 1) +
+  input.substring(264, 271 + 1) +
+  input.substring(272, 287 + 1) +
+  input.substring(288, 299 + 1) +
+  input.substring(300, 305 + 1) +
+  input.substring(306, 311 + 1) +
+  input.substring(312, 335 + 1) +
+  input.substring(336, 351 + 1) +
+  input.substring(352, 367 + 1) +
+  input.substring(368, 387 + 1) +
+  input.substring(388, 391 + 1) +
+  input.substring(392, 399 + 1) +
+  input.substring(400, 407 + 1) +
+  input.substring(528, 535 + 1) +
+  input.substring(536, 543 + 1) +
+  input.substring(544, 567 + 1) +
+  input.substring(568, 583 + 1) +
+  input.substring(584, 593 + 1) +
+  input.substring(594, 603 + 1) +
+  input.substring(604, 613 + 1) +
+  input.substring(614, 623 + 1) +
+  input.substring(624, 625 + 1) +
+  input.substring(626, 629 + 1) +
+  input.substring(630, 647 + 1) +
+  input.substring(408, 415 + 1) +
+  input.substring(416, 423 + 1) +
+  input.substring(424, 447 + 1) +
+  input.substring(448, 463 + 1) +
+  input.substring(464, 473 + 1) +
+  input.substring(474, 483 + 1) +
+  input.substring(484, 493 + 1) +
+  input.substring(494, 503 + 1) +
+  input.substring(504, 505 + 1) +
+  input.substring(506, 511 + 1) +
+  input.substring(512, 527 + 1) +
+  input.substring(648, 655 + 1) +
+  input.substring(656, 663 + 1) +
+  input.substring(664, 687 + 1) +
+  input.substring(688, 703 + 1) +
+  input.substring(704, 713 + 1) +
+  input.substring(714, 715 + 1) +
+  input.substring(716, 719 + 1) +
+  input.substring(720, 759 + 1) +
+  input.substring(760, 767 + 1);
+
+    return s;
+}
+
+function updateosa(input) {
+  let productType = "01001111"
+  let activationDate = "000010011101001001100000"
+  let expiryDate = "0000000110111111"
+  input = input.substring(0,528) + productType +input.substring(536)
+  input = input.substring(0,544) + activationDate +input.substring(568)
+  input = input.substring(0,568) + expiryDate +input.substring(584)
+  return input
+}
+
+function parseOSA() {
+    const input = document.getElementById("input").value.trim().toUpperCase();
+    const output = document.getElementById("output");
+    output.innerHTML = "";
+    output.style.display = "none";
+
+    if (!input) {
+        alert("Paste hex string first");
+        return;
+    }
+
+    const parsed = parseData(input);
+    parsed.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        output.appendChild(li);
+    });
+
+    output.style.display = "block";
+}
+
+function loadSample() {
+    document.getElementById("input").value = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010011110000000000001001101101100111110000000011011110110000000000100000111110000100001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+}
+</script>
+</body>
+</html>

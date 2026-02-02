@@ -719,7 +719,6 @@ function parseCDOL1() {
         <td class="tag-cell">${t.tag}</td>
         <td class="length-cell">${len}</td>
         <td class="raw-cell ${missingClass}">${raw || '(missing)'}</td>
-        <td class="decoded-cell ${missingClass}">${decoded || '—'}</td>
       </tr>
     `;
   }
@@ -750,7 +749,6 @@ function parseCDOL1() {
             <th>Tag</th>
             <th>Length</th>
             <th>Raw CDOL Data</th>
-            <th>Decoded Value</th>
           </tr>
         </thead>
         <tbody>

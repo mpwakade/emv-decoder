@@ -620,8 +620,11 @@ function decode(tag, hex) {
 
   switch(tag) {
     case '9F02':
+      const amount = parseInt(hex, 16);
+      return '₹ ' + (amount / 100).toFixed(2) + ' (Amount in paise: ' + amount + ')';
     case '9F03':
-      return '₹ ' + (parseInt(hex, 16) / 100).toFixed(2);
+      const otherAmount = parseInt(hex, 16);
+      return '₹ ' + (otherAmount / 100).toFixed(2) + ' (Amount in paise: ' + otherAmount + ')';
     case '9F1A':
     case '5F2A':
       return 'Code: ' + parseInt(hex, 16);

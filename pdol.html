@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PDOL Parser - EMV GPO Analysis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inconsolata:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #1a1625;
+  --bg-secondary: #221c35;
+  --bg-card: #2d2640;
+  --border-color: #3d3450;
+  --accent-primary: #a78bfa;
+  --accent-secondary: #c084fc;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --error: #fb7185;
+  --warning: #fbbf24;
+  --success: #34d399;
+  --info: #60a5fa;
+  --shadow-glow: rgba(167, 139, 250, 0.2);
+}
+
+body {
+  font-family: 'Inconsolata', 'Courier New', monospace;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Gradient mesh background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(167, 139, 250, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(192, 132, 252, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(167, 139, 250, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated accent */
+body::after {
+  content: '';
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.1) 0%, transparent 70%);
+  top: -200px;
+  right: -200px;
+  pointer-events: none;
+  animation: float-diagonal 15s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes float-diagonal {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-100px, 100px); }
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 50px;
+  animation: slideDown 0.6s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(167, 139, 250, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 20px;
+  color: var(--accent-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(167, 139, 250, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(167, 139, 250, 0.5); }
+}
+
+h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+/* Input Section */
+.input-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.6s ease-out 0.2s backwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-group:last-child {
+  margin-bottom: 0;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  outline: none;
+  resize: vertical;
+}
+
+textarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.char-count {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #1a1625;
+  box-shadow: 0 4px 15px var(--shadow-glow);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 25px rgba(167, 139, 250, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-primary);
+  background: rgba(167, 139, 250, 0.05);
+}
+
+/* Status Messages */
+.status-message {
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.status-warning {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--warning);
+}
+
+.status-error {
+  background: rgba(251, 113, 133, 0.1);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  color: var(--error);
+}
+
+.status-icon {
+  font-size: 1.5rem;
+}
+
+/* Results Table */
+.table-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.6s ease-out 0.3s backwards;
+  overflow-x: auto;
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(192, 132, 252, 0.2));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.table-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+}
+
+thead {
+  background: var(--bg-card);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--accent-primary);
+  border-bottom: 2px solid var(--border-color);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+th:first-child {
+  border-top-left-radius: 10px;
+}
+
+th:last-child {
+  border-top-right-radius: 10px;
+}
+
+tbody tr {
+  transition: all 0.2s ease;
+  animation: fadeIn 0.4s ease-out backwards;
+}
+
+tbody tr:nth-child(1) { animation-delay: 0.1s; }
+tbody tr:nth-child(2) { animation-delay: 0.15s; }
+tbody tr:nth-child(3) { animation-delay: 0.2s; }
+tbody tr:nth-child(4) { animation-delay: 0.25s; }
+tbody tr:nth-child(5) { animation-delay: 0.3s; }
+
+tbody tr:hover {
+  background: rgba(167, 139, 250, 0.05);
+  transform: translateX(4px);
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(61, 52, 80, 0.5);
+  font-family: 'Courier Prime', monospace;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tag-cell {
+  color: var(--accent-primary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.length-cell {
+  color: var(--info);
+  font-weight: 600;
+}
+
+.raw-cell {
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.missing-data {
+  color: var(--error);
+  font-style: italic;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.empty-state-text {
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .input-section, .table-container {
+    padding: 24px;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+  
+  table {
+    font-size: 0.8rem;
+  }
+  
+  th, td {
+    padding: 10px 12px;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-badge">EMV Standard · Tag 9F38 → 80A8</div>
+    <h1>PDOL Parser</h1>
+    <p class="subtitle">Processing Data Object List & GPO Command Analysis</p>
+  </div>
+
+  <div class="input-section">
+    <div class="input-group">
+      <label class="input-label" for="tlvInput">EMV TLV Data (containing Tag 9F38)</label>
+      <p class="input-description">Paste your EMV response data containing Tag 9F38 (PDOL)</p>
+      <div class="input-wrapper">
+        <textarea 
+          id="tlvInput" 
+          placeholder="Paste your EMV TLV data containing Tag 9F38 (PDOL)..."
+          autocomplete="off"
+          spellcheck="false"
+        ></textarea>
+        <span class="char-count" id="tlvCharCount">0 chars</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label" for="commandInput">GPO Command (80A8)</label>
+      <p class="input-description">Paste the full 80A8 command - data will be extracted after command + 4 chars</p>
+      <div class="input-wrapper">
+        <textarea 
+          id="commandInput" 
+          placeholder="Paste your 80A8 GPO command here..."
+          autocomplete="off"
+          spellcheck="false"
+        ></textarea>
+        <span class="char-count" id="commandCharCount">0 chars</span>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button class="btn btn-primary" onclick="parsePDOL()">
+        <span style="position: relative; z-index: 1;">⚡ Parse PDOL</span>
+      </button>
+      <button class="btn btn-secondary" onclick="clearData()">
+        <span style="position: relative; z-index: 1;">🗑️ Clear All</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="statusContainer"></div>
+
+  <div id="output">
+    <div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-text">Enter EMV TLV data and GPO command above to begin parsing</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Character counters
+const tlvInput = document.getElementById('tlvInput');
+const commandInput = document.getElementById('commandInput');
+const tlvCharCount = document.getElementById('tlvCharCount');
+const commandCharCount = document.getElementById('commandCharCount');
+
+tlvInput.addEventListener('input', function() {
+  tlvCharCount.textContent = `${this.value.trim().length} chars`;
+});
+
+commandInput.addEventListener('input', function() {
+  commandCharCount.textContent = `${this.value.trim().length} chars`;
+});
+
+// Utility functions
+function clean(s) {
+  return s.replace(/\s+/g, '').toUpperCase();
+}
+
+function readTag(hex, i) {
+  let tag = hex.substr(i, 2);
+  i += 2;
+  if ((parseInt(tag, 16) & 0x1F) === 0x1F) {
+    tag += hex.substr(i, 2);
+    i += 2;
+  }
+  return { tag, index: i };
+}
+
+function readLen(hex, i) {
+  let len = parseInt(hex.substr(i, 2), 16);
+  return { len, index: i + 2 };
+}
+
+// Extract 9F38 from TLV data
+function extract9F38(tlv) {
+  let i = 0;
+  
+  while (i < tlv.length) {
+    const tg = readTag(tlv, i);
+    i = tg.index;
+    
+    if (i >= tlv.length) break;
+    
+    const ln = readLen(tlv, i);
+    i = ln.index;
+    
+    if (tg.tag === '9F38') {
+      return tlv.substr(ln.index, ln.len * 2);
+    }
+    
+    i += ln.len * 2;
+  }
+  return null;
+}
+
+// Extract data from 80A8 command (skip command + 4 chars)
+function extractPDOLDataFrom80A8(hex) {
+  // Command is 80A8 (4 chars), then skip next 4 chars (00 00), then get remaining data
+  if (hex.startsWith('80A8')) {
+    return hex.substr(8); // Skip "80A8" + 4 chars
+  }
+  return hex;
+}
+
+function parsePDOL() {
+  const tlv = clean(tlvInput.value);
+  const command = clean(commandInput.value);
+  const output = document.getElementById('output');
+  const statusContainer = document.getElementById('statusContainer');
+  
+  output.innerHTML = '';
+  statusContainer.innerHTML = '';
+
+  // Validation
+  if (!tlv || !command) {
+    statusContainer.innerHTML = `
+      <div class="status-message status-error">
+        <div class="status-icon">⚠️</div>
+        <div>
+          <div style="font-weight: 600;">Missing input data</div>
+          <div style="font-size: 0.85rem; margin-top: 4px;">Please provide both EMV TLV data and GPO command</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Extract PDOL from Tag 9F38
+  const pdol = extract9F38(tlv);
+  if (!pdol) {
+    statusContainer.innerHTML = `
+      <div class="status-message status-error">
+        <div class="status-icon">❌</div>
+        <div>
+          <div style="font-weight: 600;">Tag 9F38 (PDOL) not found</div>
+          <div style="font-size: 0.85rem; margin-top: 4px;">Make sure your TLV data contains Tag 9F38</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Extract PDOL data from command (skip command + 4 chars)
+  const data = extractPDOLDataFrom80A8(command);
+
+  // Parse PDOL
+  let pos = 0;
+  let expected = 0;
+  let tableRows = '';
+
+  let i = 0;
+  while (i < pdol.length) {
+    const t = readTag(pdol, i);
+    i = t.index;
+    const len = parseInt(pdol.substr(i, 2), 16);
+    i += 2;
+
+    const raw = data.substr(pos, len * 2);
+    pos += len * 2;
+    expected += len;
+
+    const missingClass = !raw ? 'missing-data' : '';
+
+    tableRows += `
+      <tr>
+        <td class="tag-cell">${t.tag}</td>
+        <td class="length-cell">${len}</td>
+        <td class="raw-cell ${missingClass}">${raw || '(missing)'}</td>
+      </tr>
+    `;
+  }
+
+  // Check for length mismatch
+  if (pos !== data.length) {
+    statusContainer.innerHTML = `
+      <div class="status-message status-warning">
+        <div class="status-icon">⚠️</div>
+        <div>
+          <div style="font-weight: 600;">PDOL length mismatch detected</div>
+          <div style="font-size: 0.85rem; margin-top: 4px;">Expected ${expected} bytes based on PDOL structure</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Display results table
+  output.innerHTML = `
+    <div class="table-container">
+      <div class="table-header">
+        <div class="table-icon">📋</div>
+        <div class="table-title">PDOL Parsed Data</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Length</th>
+            <th>Raw PDOL Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function clearData() {
+  tlvInput.value = '';
+  commandInput.value = '';
+  tlvCharCount.textContent = '0 chars';
+  commandCharCount.textContent = '0 chars';
+  document.getElementById('statusContainer').innerHTML = '';
+  document.getElementById('output').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-text">Enter EMV TLV data and GPO command above to begin parsing</div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

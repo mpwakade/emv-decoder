@@ -514,7 +514,7 @@ tbody tr:last-child td {
 
     <div class="input-group">
       <label class="input-label" for="commandInput">GPO Command (80A8)</label>
-      <p class="input-description">Paste the full 80A8 command - data will be extracted after command + 4 chars</p>
+      <p class="input-description">Paste the full 80A8 command (format: 80 A8 00 00 [Lc] 83 [length] [PDOL data])</p>
       <div class="input-wrapper">
         <textarea 
           id="commandInput" 
@@ -581,35 +581,108 @@ function readLen(hex, i) {
   return { len, index: i + 2 };
 }
 
-// Extract 9F38 from TLV data
+// Extract 9F38 from TLV data (recursive search)
 function extract9F38(tlv) {
   let i = 0;
   
-  while (i < tlv.length) {
-    const tg = readTag(tlv, i);
-    i = tg.index;
+  while (i < tlv.length - 4) {
+    // Read tag
+    let tag = tlv.substr(i, 2);
+    i += 2;
     
-    if (i >= tlv.length) break;
-    
-    const ln = readLen(tlv, i);
-    i = ln.index;
-    
-    if (tg.tag === '9F38') {
-      return tlv.substr(ln.index, ln.len * 2);
+    // Multi-byte tag
+    if ((parseInt(tag, 16) & 0x1F) === 0x1F) {
+      if (i + 2 > tlv.length) break;
+      tag += tlv.substr(i, 2);
+      i += 2;
     }
     
-    i += ln.len * 2;
+    // Read length
+    if (i + 2 > tlv.length) break;
+    let len = parseInt(tlv.substr(i, 2), 16);
+    i += 2;
+    
+    // Handle multi-byte length
+    if (len > 127) {
+      const numLenBytes = len & 0x7F;
+      if (i + numLenBytes * 2 > tlv.length) break;
+      let lenHex = tlv.substr(i, numLenBytes * 2);
+      len = parseInt(lenHex, 16);
+      i += numLenBytes * 2;
+    }
+    
+    // Check if we have enough data
+    if (i + len * 2 > tlv.length) break;
+    
+    // Found 9F38!
+    if (tag === '9F38') {
+      return tlv.substr(i, len * 2);
+    }
+    
+    // Check if this is a constructed tag (bit 6 set in first byte)
+    const firstByte = parseInt(tag.substr(0, 2), 16);
+    const isConstructed = (firstByte & 0x20) !== 0;
+    
+    // Recursively search inside constructed tags
+    if (isConstructed) {
+      const innerData = tlv.substr(i, len * 2);
+      const result = extract9F38(innerData);
+      if (result) return result;
+    }
+    
+    // Move to next tag
+    i += len * 2;
   }
+  
   return null;
 }
 
-// Extract data from 80A8 command (skip command + 4 chars)
+// Extract data from 80A8 command
+// Format: 80 A8 00 00 [length] [data]
+// Skip: 80A8 (4 chars) + 0000 (4 chars) + length (2 chars) = 10 chars total
 function extractPDOLDataFrom80A8(hex) {
-  // Command is 80A8 (4 chars), then skip next 4 chars (00 00), then get remaining data
   if (hex.startsWith('80A8')) {
-    return hex.substr(8); // Skip "80A8" + 4 chars
+    // Skip "80A8" (4) + "0000" (4) + length byte (2) + "83" tag (2) + "25" length (2) = 14 chars
+    return hex.substr(14);
   }
   return hex;
+}
+
+// Get tag description
+function getTagDescription(tag) {
+  const descriptions = {
+    '9F40': 'Additional Terminal Capabilities',
+    'DF3A': 'RuPay Additional Data',
+    '9F33': 'Terminal Capabilities',
+    '9F09': 'Application Version Number',
+    '9F15': 'Merchant Category Code',
+    '9A': 'Transaction Date',
+    '9F21': 'Transaction Time',
+    '9F37': 'Unpredictable Number',
+    'DF16': 'RuPay Proprietary Data',
+    '9F1C': 'Terminal Identification',
+    '9F02': 'Amount, Authorized (Numeric)',
+    '9F03': 'Amount, Other (Numeric)',
+    '9F1A': 'Terminal Country Code',
+    '5F2A': 'Transaction Currency Code',
+    '95': 'Terminal Verification Results',
+    '9C': 'Transaction Type',
+    '9F35': 'Terminal Type',
+    '9F34': 'CVM Results',
+    '9F41': 'Transaction Sequence Counter',
+    '9F66': 'Terminal Transaction Qualifiers',
+    '9F6E': 'Form Factor Indicator',
+    '9F7C': 'Merchant Custom Data',
+    'DF60': 'RuPay Transaction Data',
+    'DF61': 'RuPay Service Code',
+    'DF62': 'RuPay Balance',
+    'DF63': 'RuPay Counter',
+    '81': 'Amount, Authorised (Binary)',
+    '9F39': 'Point-of-Service (POS) Entry Mode',
+    '9F4E': 'Merchant Name and Location'
+  };
+  
+  return descriptions[tag] || 'Unknown Tag';
 }
 
 function parsePDOL() {
@@ -670,12 +743,14 @@ function parsePDOL() {
     expected += len;
 
     const missingClass = !raw ? 'missing-data' : '';
+    const description = getTagDescription(t.tag);
 
     tableRows += `
       <tr>
         <td class="tag-cell">${t.tag}</td>
         <td class="length-cell">${len}</td>
         <td class="raw-cell ${missingClass}">${raw || '(missing)'}</td>
+        <td class="decoded-cell">${description}</td>
       </tr>
     `;
   }
@@ -706,6 +781,7 @@ function parsePDOL() {
             <th>Tag</th>
             <th>Length</th>
             <th>Raw PDOL Data</th>
+            <th>Description</th>
           </tr>
         </thead>
         <tbody>

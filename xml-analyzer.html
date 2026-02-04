@@ -606,10 +606,29 @@ function parseXML(xmlText) {
         additionalInfo = `
           <div style="margin-top: 16px; padding: 16px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
             <div style="font-weight: 600; color: var(--accent-primary); margin-bottom: 12px;">📊 Parsed GPO Details</div>
-            <div style="display: grid; gap: 8px; font-size: 0.85rem;">
+            <div style="display: grid; gap: 8px; font-size: 0.85rem; margin-bottom: 16px;">
               <div><span style="color: var(--text-muted);">Response Format:</span> <span style="color: var(--success);">${gpoParsed.response.format || 'N/A'}</span></div>
-              <div><span style="color: var(--text-muted);">PDOL Data:</span> <span style="color: var(--warning); font-family: 'Fira Mono', monospace;">${gpoParsed.command.pdolData}</span></div>
+              <div><span style="color: var(--text-muted);">PDOL Data Length:</span> <span style="color: var(--text-secondary);">${gpoParsed.command.pdolLength} bytes</span></div>
+              <div><span style="color: var(--text-muted);">PDOL Data:</span> <span style="color: var(--warning); font-family: 'Fira Mono', monospace; font-size: 0.8rem;">${gpoParsed.command.pdolData}</span></div>
             </div>
+            ${gpoParsed.response.tags && gpoParsed.response.tags.length > 0 ? `
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0, 217, 255, 0.2);">
+                <div style="font-weight: 600; color: var(--accent-primary); margin-bottom: 8px;">Response Tags Breakdown:</div>
+                <div style="display: grid; gap: 10px;">
+                  ${gpoParsed.response.tags.map(tag => `
+                    <div style="padding: 10px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; border-left: 2px solid var(--info);">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--accent-primary); font-weight: 600; font-family: 'Fira Mono', monospace;">${tag.tag}</span>
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">${tag.length} bytes</span>
+                      </div>
+                      <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 4px;">${tag.description}</div>
+                      <div style="color: var(--warning); font-family: 'Fira Mono', monospace; font-size: 0.75rem; word-break: break-all;">Value: ${tag.value}</div>
+                      ${tag.decoded && tag.decoded !== tag.value ? `<div style="color: var(--success); font-size: 0.8rem; margin-top: 4px;">→ ${tag.decoded}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
         `;
       }
@@ -618,15 +637,33 @@ function parseXML(xmlText) {
         additionalInfo = `
           <div style="margin-top: 16px; padding: 16px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
             <div style="font-weight: 600; color: var(--accent-primary); margin-bottom: 12px;">🔐 Parsed GENERATE AC Details</div>
-            <div style="display: grid; gap: 8px; font-size: 0.85rem;">
-              <div><span style="color: var(--text-muted);">Requested:</span> <span style="color: var(--warning);">${genACParsed.command.requestedCryptogram}</span></div>
-              <div><span style="color: var(--text-muted);">Reference Control:</span> <span style="color: var(--info);">${genACParsed.command.refControl}</span></div>
-              <div><span style="color: var(--text-muted);">CDOL Length:</span> <span style="color: var(--text-secondary);">${genACParsed.command.cdolLength} bytes</span></div>
-              ${genACParsed.response.generatedCryptogram ? `<div><span style="color: var(--text-muted);">Generated:</span> <span style="color: var(--success);">${genACParsed.response.generatedCryptogram}</span></div>` : ''}
-              ${genACParsed.response.atc ? `<div><span style="color: var(--text-muted);">ATC (9F36):</span> <span style="color: var(--accent-primary); font-family: 'Fira Mono', monospace;">${genACParsed.response.atc}</span></div>` : ''}
+            <div style="display: grid; gap: 8px; font-size: 0.85rem; margin-bottom: 16px;">
+              <div><span style="color: var(--text-muted);">Requested Cryptogram:</span> <span style="color: var(--warning);">${genACParsed.command.requestedCryptogram}</span></div>
+              <div><span style="color: var(--text-muted);">Reference Control (P1):</span> <span style="color: var(--info);">${genACParsed.command.refControl}</span></div>
+              <div><span style="color: var(--text-muted);">P2 Parameter:</span> <span style="color: var(--info);">${genACParsed.command.p2}</span></div>
+              <div><span style="color: var(--text-muted);">CDOL Data Length:</span> <span style="color: var(--text-secondary);">${genACParsed.command.cdolLength} bytes</span></div>
+              ${genACParsed.response.generatedCryptogram ? `<div style="margin-top: 8px; padding: 8px; background: rgba(76, 175, 80, 0.1); border-radius: 4px;"><span style="color: var(--text-muted);">Generated:</span> <span style="color: var(--success); font-weight: 600;">${genACParsed.response.generatedCryptogram}</span></div>` : ''}
+              ${genACParsed.response.atc ? `<div><span style="color: var(--text-muted);">ATC:</span> <span style="color: var(--accent-primary); font-family: 'Fira Mono', monospace;">${genACParsed.response.atc}</span></div>` : ''}
               ${genACParsed.response.cryptogram ? `<div><span style="color: var(--text-muted);">Cryptogram (9F26):</span> <span style="color: var(--accent-primary); font-family: 'Fira Mono', monospace;">${genACParsed.response.cryptogram}</span></div>` : ''}
-              ${genACParsed.response.iad ? `<div><span style="color: var(--text-muted);">IAD (9F10):</span> <span style="color: var(--accent-primary); font-family: 'Fira Mono', monospace;">${genACParsed.response.iad}</span></div>` : ''}
             </div>
+            ${genACParsed.response.tags && genACParsed.response.tags.length > 0 ? `
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0, 217, 255, 0.2);">
+                <div style="font-weight: 600; color: var(--accent-primary); margin-bottom: 8px;">Response Tags Breakdown:</div>
+                <div style="display: grid; gap: 10px;">
+                  ${genACParsed.response.tags.map(tag => `
+                    <div style="padding: 10px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; border-left: 2px solid var(--success);">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--accent-primary); font-weight: 600; font-family: 'Fira Mono', monospace;">${tag.tag}</span>
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">${tag.length} bytes</span>
+                      </div>
+                      <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 4px;">${tag.description}</div>
+                      <div style="color: var(--warning); font-family: 'Fira Mono', monospace; font-size: 0.75rem; word-break: break-all;">Value: ${tag.value}</div>
+                      ${tag.decoded && tag.decoded !== tag.value ? `<div style="color: var(--success); font-size: 0.8rem; margin-top: 4px;">→ ${tag.decoded}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
         `;
       }
@@ -682,26 +719,206 @@ function parseGPOCommand(command, response) {
   // Extract PDOL data (skip 80A8 + 0000 + Lc + 83 + length = 14 chars)
   const pdolData = cleanCmd.substr(14);
   
-  // Parse response (starts with 77)
+  // Parse response with full TLV breakdown
   let parsed = {
     command: {
       type: 'GET PROCESSING OPTIONS',
-      pdolData: formatHex(pdolData)
+      pdolData: formatHex(pdolData),
+      pdolLength: pdolData.length / 2
     },
-    response: {}
+    response: {
+      tags: []
+    }
   };
   
   if (cleanResp.startsWith('77')) {
     // Response Message Template Format 2
-    parsed.response.format = 'Format 2 (Tag 77)';
-    parsed.response.rawData = formatHex(cleanResp);
+    parsed.response.format = 'Format 2 (Tag 77 - Response Message Template)';
+    
+    // Skip 77 tag and length bytes
+    let i = 2; // Skip '77'
+    let len = parseInt(cleanResp.substr(i, 2), 16);
+    i += 2;
+    
+    if (len > 127) {
+      const numLenBytes = len & 0x7F;
+      len = parseInt(cleanResp.substr(i, numLenBytes * 2), 16);
+      i += numLenBytes * 2;
+    }
+    
+    // Parse all tags inside
+    const responseData = cleanResp.substr(i, len * 2);
+    parsed.response.tags = parseAllTags(responseData);
+    
   } else if (cleanResp.startsWith('80')) {
     // Response Message Template Format 1
-    parsed.response.format = 'Format 1 (Tag 80)';
-    parsed.response.rawData = formatHex(cleanResp);
+    parsed.response.format = 'Format 1 (Tag 80 - Primitive Response)';
+    parsed.response.tags = parseAllTags(cleanResp);
   }
   
   return parsed;
+}
+
+function parseAllTags(hex) {
+  const tags = [];
+  let i = 0;
+  
+  while (i < hex.length - 4) {
+    const startPos = i;
+    
+    // Read tag
+    let tag = hex.substr(i, 2);
+    i += 2;
+    
+    if ((parseInt(tag, 16) & 0x1F) === 0x1F) {
+      if (i + 2 > hex.length) break;
+      tag += hex.substr(i, 2);
+      i += 2;
+    }
+    
+    // Read length
+    if (i + 2 > hex.length) break;
+    let len = parseInt(hex.substr(i, 2), 16);
+    let lenBytes = hex.substr(i, 2);
+    i += 2;
+    
+    if (len > 127) {
+      const numLenBytes = len & 0x7F;
+      if (i + numLenBytes * 2 > hex.length) break;
+      lenBytes += hex.substr(i, numLenBytes * 2);
+      len = parseInt(hex.substr(i, numLenBytes * 2), 16);
+      i += numLenBytes * 2;
+    }
+    
+    // Read value
+    if (i + len * 2 > hex.length) break;
+    const value = hex.substr(i, len * 2);
+    i += len * 2;
+    
+    tags.push({
+      tag: tag,
+      length: len,
+      lengthHex: lenBytes,
+      value: value,
+      description: getTagDescription(tag),
+      decoded: decodeTagValue(tag, value)
+    });
+  }
+  
+  return tags;
+}
+
+function getTagDescription(tag) {
+  const descriptions = {
+    '82': 'Application Interchange Profile (AIP)',
+    '94': 'Application File Locator (AFL)',
+    '9F36': 'Application Transaction Counter (ATC)',
+    '9F26': 'Application Cryptogram (AC)',
+    '9F27': 'Cryptogram Information Data (CID)',
+    '9F10': 'Issuer Application Data (IAD)',
+    '9F37': 'Unpredictable Number',
+    '9F4B': 'Signed Dynamic Application Data',
+    'DF33': 'RuPay Proprietary Data',
+    '57': 'Track 2 Equivalent Data',
+    '5A': 'Application Primary Account Number (PAN)',
+    '5F34': 'PAN Sequence Number',
+    '5F25': 'Application Effective Date',
+    '5F24': 'Application Expiration Date',
+    '9F08': 'Application Version Number (Card)',
+    '8E': 'Cardholder Verification Method (CVM) List',
+    '9F0E': 'Issuer Action Code - Denial',
+    '9F0F': 'Issuer Action Code - Online',
+    '9F0D': 'Issuer Action Code - Default',
+    '5F28': 'Issuer Country Code',
+    '9F1F': 'Track 1 Discretionary Data',
+    '5F20': 'Cardholder Name',
+    '9F4A': 'Static Data Authentication Tag List',
+    '8F': 'Certification Authority Public Key Index',
+    '92': 'Issuer Public Key Remainder',
+    '9F32': 'Issuer Public Key Exponent',
+    '9F47': 'ICC Public Key Exponent',
+    '9F46': 'ICC Public Key Certificate',
+    '90': 'Issuer Public Key Certificate',
+    '9F38': 'Processing Options Data Object List (PDOL)',
+    '8C': 'Card Risk Management Data Object List 1 (CDOL1)',
+    '8D': 'Card Risk Management Data Object List 2 (CDOL2)',
+    '9F07': 'Application Usage Control',
+    '9F40': 'Additional Terminal Capabilities',
+    '9F33': 'Terminal Capabilities',
+    '95': 'Terminal Verification Results (TVR)',
+    '9A': 'Transaction Date',
+    '9C': 'Transaction Type',
+    '9F02': 'Amount, Authorized (Numeric)',
+    '9F03': 'Amount, Other (Numeric)',
+    '9F1A': 'Terminal Country Code',
+    '5F2A': 'Transaction Currency Code',
+    '5F30': 'Service Code',
+    'DF3A': 'RuPay Additional Data'
+  };
+  
+  return descriptions[tag] || 'Unknown Tag';
+}
+
+function decodeTagValue(tag, value) {
+  if (!value) return '';
+  
+  switch(tag) {
+    case '82': // AIP
+      const aip = parseInt(value, 16);
+      let aipBits = [];
+      if (aip & 0x4000) aipBits.push('SDA supported');
+      if (aip & 0x2000) aipBits.push('DDA supported');
+      if (aip & 0x1000) aipBits.push('Cardholder verification supported');
+      if (aip & 0x0800) aipBits.push('Terminal risk management required');
+      if (aip & 0x0400) aipBits.push('Issuer authentication supported');
+      if (aip & 0x0080) aipBits.push('CDA supported');
+      return aipBits.join(', ') || 'No capabilities';
+      
+    case '94': // AFL
+      let aflEntries = [];
+      for (let i = 0; i < value.length; i += 8) {
+        const sfi = parseInt(value.substr(i, 2), 16) >> 3;
+        const firstRec = parseInt(value.substr(i + 2, 2), 16);
+        const lastRec = parseInt(value.substr(i + 4, 2), 16);
+        const numAuth = parseInt(value.substr(i + 6, 2), 16);
+        aflEntries.push(`SFI ${sfi}, Rec ${firstRec}-${lastRec}, ${numAuth} for auth`);
+      }
+      return aflEntries.join(' | ');
+      
+    case '9F27': // CID
+      const cid = parseInt(value, 16);
+      let cidType = '';
+      if ((cid & 0xC0) === 0x00) cidType = 'AAC (Declined)';
+      else if ((cid & 0xC0) === 0x40) cidType = 'TC (Approved)';
+      else if ((cid & 0xC0) === 0x80) cidType = 'ARQC (Online)';
+      return cidType + ' - ' + value;
+      
+    case '9F36': // ATC
+      return parseInt(value, 16).toString() + ' (' + value + ')';
+      
+    case '9A': // Transaction Date
+      return '20' + value.substr(0, 2) + '-' + value.substr(2, 2) + '-' + value.substr(4, 2);
+      
+    case '9F02':
+    case '9F03': // Amount
+      const bcdStr = value.match(/.{1,2}/g).join('');
+      const amount = parseFloat(bcdStr.substring(0, bcdStr.length - 2) + '.' + bcdStr.substring(bcdStr.length - 2));
+      return '₹ ' + amount.toFixed(2);
+      
+    case '57': // Track 2
+    case '5A': // PAN
+      return value.replace(/F/g, '') + ' (masked)';
+      
+    case '5F20': // Cardholder Name
+      let name = '';
+      for (let i = 0; i < value.length; i += 2) {
+        name += String.fromCharCode(parseInt(value.substr(i, 2), 16));
+      }
+      return name.trim();
+      
+    default:
+      return value;
+  }
 }
 
 function parseGenerateAC(command, response) {
@@ -720,47 +937,55 @@ function parseGenerateAC(command, response) {
   
   let cryptogramType = 'Unknown';
   const refByte = parseInt(refControl, 16);
-  if ((refByte & 0xC0) === 0x00) cryptogramType = 'AAC (Declined)';
-  else if ((refByte & 0xC0) === 0x40) cryptogramType = 'TC (Approved)';
-  else if ((refByte & 0xC0) === 0x80) cryptogramType = 'ARQC (Online)';
+  if ((refByte & 0xC0) === 0x00) cryptogramType = 'AAC (Transaction Declined)';
+  else if ((refByte & 0xC0) === 0x40) cryptogramType = 'TC (Transaction Approved)';
+  else if ((refByte & 0xC0) === 0x80) cryptogramType = 'ARQC (Online Authorization Requested)';
   
   let parsed = {
     command: {
       type: 'GENERATE AC',
       refControl: refControl,
+      p2: p2,
       requestedCryptogram: cryptogramType,
       cdolLength: parseInt(lc, 16),
       cdolData: formatHex(cdolData)
     },
-    response: {}
+    response: {
+      tags: []
+    }
   };
   
   if (cleanResp.startsWith('77')) {
-    // Parse response template
+    // Parse response template with full TLV
     parsed.response.format = 'Response Template (Tag 77)';
     
-    // Try to extract cryptogram (9F26) and other key tags
-    const respTags = extractTags(cleanResp);
-    if (respTags['9F27']) {
-      const cid = respTags['9F27'];
-      let genType = 'Unknown';
-      const cidByte = parseInt(cid, 16);
-      if ((cidByte & 0xC0) === 0x00) genType = 'AAC';
-      else if ((cidByte & 0xC0) === 0x40) genType = 'TC';
-      else if ((cidByte & 0xC0) === 0x80) genType = 'ARQC';
-      parsed.response.generatedCryptogram = genType + ' (CID: ' + cid + ')';
-    }
-    if (respTags['9F36']) {
-      parsed.response.atc = respTags['9F36'];
-    }
-    if (respTags['9F26']) {
-      parsed.response.cryptogram = respTags['9F26'];
-    }
-    if (respTags['9F10']) {
-      parsed.response.iad = respTags['9F10'];
+    // Skip 77 tag and length bytes
+    let i = 2;
+    let len = parseInt(cleanResp.substr(i, 2), 16);
+    i += 2;
+    
+    if (len > 127) {
+      const numLenBytes = len & 0x7F;
+      len = parseInt(cleanResp.substr(i, numLenBytes * 2), 16);
+      i += numLenBytes * 2;
     }
     
-    parsed.response.rawData = formatHex(cleanResp);
+    // Parse all tags
+    const responseData = cleanResp.substr(i, len * 2);
+    parsed.response.tags = parseAllTags(responseData);
+    
+    // Extract key information for summary
+    parsed.response.tags.forEach(tag => {
+      if (tag.tag === '9F27') {
+        parsed.response.generatedCryptogram = tag.decoded;
+      } else if (tag.tag === '9F36') {
+        parsed.response.atc = tag.value + ' (Counter: ' + parseInt(tag.value, 16) + ')';
+      } else if (tag.tag === '9F26') {
+        parsed.response.cryptogram = tag.value;
+      } else if (tag.tag === '9F10') {
+        parsed.response.iad = tag.value;
+      }
+    });
   }
   
   return parsed;

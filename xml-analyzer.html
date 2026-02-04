@@ -596,6 +596,41 @@ function parseXML(xmlText) {
       
       const commandType = identifyCommand(command);
       
+      // Check if this is GPO or GENERATE AC and parse it
+      const gpoParsed = parseGPOCommand(command, response);
+      const genACParsed = parseGenerateAC(command, response);
+      
+      let additionalInfo = '';
+      
+      if (gpoParsed) {
+        additionalInfo = `
+          <div style="margin-top: 16px; padding: 16px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+            <div style="font-weight: 600; color: var(--accent-primary); margin-bottom: 12px;">📊 Parsed GPO Details</div>
+            <div style="display: grid; gap: 8px; font-size: 0.85rem;">
+              <div><span style="color: var(--text-muted);">Response Format:</span> <span style="color: var(--success);">${gpoParsed.response.format || 'N/A'}</span></div>
+              <div><span style="color: var(--text-muted);">PDOL Data:</span> <span style="color: var(--warning); font-family: 'Fira Mono', monospace;">${gpoParsed.command.pdolData}</span></div>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (genACParsed) {
+        additionalInfo = `
+          <div style="margin-top: 16px; padding: 16px; background: rgba(0, 217, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+            <div style="font-weight: 600; color: var(--accent-primary); margin-bottom: 12px;">🔐 Parsed GENERATE AC Details</div>
+            <div style="display: grid; gap: 8px; font-size: 0.85rem;">
+              <div><span style="color: var(--text-muted);">Requested:</span> <span style="color: var(--warning);">${genACParsed.command.requestedCryptogram}</span></div>
+              <div><span style="color: var(--text-muted);">Reference Control:</span> <span style="color: var(--info);">${genACParsed.command.refControl}</span></div>
+              <div><span style="color: var(--text-muted);">CDOL Length:</span> <span style="color: var(--text-secondary);">${genACParsed.command.cdolLength} bytes</span></div>
+              ${genACParsed.response.generatedCryptogram ? `<div><span style="color: var(--text-muted);">Generated:</span> <span style="color: var(--success);">${genACParsed.response.generatedCryptogram}</span></div>` : ''}
+              ${genACParsed.response.atc ? `<div><span style="color: var(--text-muted);">ATC (9F36):</span> <span style="color: var(--accent-primary); font-family: 'Fira Mono', monospace;">${genACParsed.response.atc}</span></div>` : ''}
+              ${genACParsed.response.cryptogram ? `<div><span style="color: var(--text-muted);">Cryptogram (9F26):</span> <span style="color: var(--accent-primary); font-family: 'Fira Mono', monospace;">${genACParsed.response.cryptogram}</span></div>` : ''}
+              ${genACParsed.response.iad ? `<div><span style="color: var(--text-muted);">IAD (9F10):</span> <span style="color: var(--accent-primary); font-family: 'Fira Mono', monospace;">${genACParsed.response.iad}</span></div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+      
       html += `
         <div class="${cardClass}" style="animation-delay: ${index * 0.05}s;">
           <div class="command-header">
@@ -612,6 +647,8 @@ function parseXML(xmlText) {
             <div class="command-label">Response</div>
             <div class="response-data">${formatHex(response)}</div>
           </div>
+          
+          ${additionalInfo}
         </div>
       `;
     });
@@ -631,6 +668,140 @@ function formatHex(hex) {
   if (hex === 'null') return 'null';
   // Add space every 2 characters for readability
   return hex.trim().replace(/(.{2})/g, '$1 ').trim();
+}
+
+function parseGPOCommand(command, response) {
+  // GPO format: 80 A8 00 00 [Lc] 83 [length] [PDOL data]
+  const cleanCmd = command.replace(/\s/g, '');
+  const cleanResp = response.replace(/\s/g, '');
+  
+  if (!cleanCmd.startsWith('80A8') || cleanResp === 'null') {
+    return null;
+  }
+  
+  // Extract PDOL data (skip 80A8 + 0000 + Lc + 83 + length = 14 chars)
+  const pdolData = cleanCmd.substr(14);
+  
+  // Parse response (starts with 77)
+  let parsed = {
+    command: {
+      type: 'GET PROCESSING OPTIONS',
+      pdolData: formatHex(pdolData)
+    },
+    response: {}
+  };
+  
+  if (cleanResp.startsWith('77')) {
+    // Response Message Template Format 2
+    parsed.response.format = 'Format 2 (Tag 77)';
+    parsed.response.rawData = formatHex(cleanResp);
+  } else if (cleanResp.startsWith('80')) {
+    // Response Message Template Format 1
+    parsed.response.format = 'Format 1 (Tag 80)';
+    parsed.response.rawData = formatHex(cleanResp);
+  }
+  
+  return parsed;
+}
+
+function parseGenerateAC(command, response) {
+  // GENERATE AC format: 80 AE [RefControl] 00 [Lc] [CDOL data]
+  const cleanCmd = command.replace(/\s/g, '');
+  const cleanResp = response.replace(/\s/g, '');
+  
+  if (!cleanCmd.startsWith('80AE') || cleanResp === 'null') {
+    return null;
+  }
+  
+  const refControl = cleanCmd.substr(4, 2);
+  const p2 = cleanCmd.substr(6, 2);
+  const lc = cleanCmd.substr(8, 2);
+  const cdolData = cleanCmd.substr(10);
+  
+  let cryptogramType = 'Unknown';
+  const refByte = parseInt(refControl, 16);
+  if ((refByte & 0xC0) === 0x00) cryptogramType = 'AAC (Declined)';
+  else if ((refByte & 0xC0) === 0x40) cryptogramType = 'TC (Approved)';
+  else if ((refByte & 0xC0) === 0x80) cryptogramType = 'ARQC (Online)';
+  
+  let parsed = {
+    command: {
+      type: 'GENERATE AC',
+      refControl: refControl,
+      requestedCryptogram: cryptogramType,
+      cdolLength: parseInt(lc, 16),
+      cdolData: formatHex(cdolData)
+    },
+    response: {}
+  };
+  
+  if (cleanResp.startsWith('77')) {
+    // Parse response template
+    parsed.response.format = 'Response Template (Tag 77)';
+    
+    // Try to extract cryptogram (9F26) and other key tags
+    const respTags = extractTags(cleanResp);
+    if (respTags['9F27']) {
+      const cid = respTags['9F27'];
+      let genType = 'Unknown';
+      const cidByte = parseInt(cid, 16);
+      if ((cidByte & 0xC0) === 0x00) genType = 'AAC';
+      else if ((cidByte & 0xC0) === 0x40) genType = 'TC';
+      else if ((cidByte & 0xC0) === 0x80) genType = 'ARQC';
+      parsed.response.generatedCryptogram = genType + ' (CID: ' + cid + ')';
+    }
+    if (respTags['9F36']) {
+      parsed.response.atc = respTags['9F36'];
+    }
+    if (respTags['9F26']) {
+      parsed.response.cryptogram = respTags['9F26'];
+    }
+    if (respTags['9F10']) {
+      parsed.response.iad = respTags['9F10'];
+    }
+    
+    parsed.response.rawData = formatHex(cleanResp);
+  }
+  
+  return parsed;
+}
+
+function extractTags(hex) {
+  const tags = {};
+  let i = 0;
+  
+  while (i < hex.length - 4) {
+    // Read tag
+    let tag = hex.substr(i, 2);
+    i += 2;
+    
+    if ((parseInt(tag, 16) & 0x1F) === 0x1F) {
+      if (i + 2 > hex.length) break;
+      tag += hex.substr(i, 2);
+      i += 2;
+    }
+    
+    // Read length
+    if (i + 2 > hex.length) break;
+    let len = parseInt(hex.substr(i, 2), 16);
+    i += 2;
+    
+    if (len > 127) {
+      const numLenBytes = len & 0x7F;
+      if (i + numLenBytes * 2 > hex.length) break;
+      len = parseInt(hex.substr(i, numLenBytes * 2), 16);
+      i += numLenBytes * 2;
+    }
+    
+    // Read value
+    if (i + len * 2 > hex.length) break;
+    const value = hex.substr(i, len * 2);
+    i += len * 2;
+    
+    tags[tag] = value;
+  }
+  
+  return tags;
 }
 
 function identifyCommand(command) {

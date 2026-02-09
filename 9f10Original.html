@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IAD Hex Decoder</title>
+  <style>
+    body { font-family: monospace; background: #f4f4f4; padding: 20px; }
+    textarea { width: 100%; height: 100px; }
+    pre { background: #fff; padding: 10px; border: 1px solid #ccc; overflow: auto; }
+    h2 { margin-bottom: 10px; }
+    button { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h2>IAD Hex Decoder</h2>
+  <textarea id="hexInput" placeholder="Paste the full hex string here..."></textarea><br>
+  <button onclick="decodeHex()">Decode</button>
+  <pre id="output"></pre>
+
+  <script>
+    // Convert hex string to full binary string
+    function hexToBin(hex) {
+      return hex
+        .split('')
+        .map(h => parseInt(h, 16).toString(2).padStart(4, '0'))
+        .join('');
+    }
+
+    // Slice a substring from a binary string given start bit and length
+    function sliceBits(bin, start, length) {
+      return bin.substr(start, length);
+    }
+
+    function decodeHex() {
+      const hex = document.getElementById('hexInput').value.trim();
+      const out = [];
+      if (hex.length < 70) {
+        out.push('⚠️ Input too short — expected at least 70 hex characters');
+        document.getElementById('output').textContent = out.join('\n');
+        return;
+      }
+
+      out.push(`TAG             : ${hex.slice(0, 4)}`);
+      out.push(`Length          : ${hex.slice(4, 6)}`);
+      out.push(`Length Indicator: ${hex.slice(6, 8)}\n`);
+
+      // CAII
+      const caiiHex = hex.slice(8, 10);
+      const caiiBin = hexToBin(caiiHex);
+      out.push(`CAII           : ${caiiHex} (bits: ${caiiBin})`);
+      const caii_msb = caiiBin.slice(0, 4);
+      const caii_lsb = caiiBin.slice(4);
+      out.push(`  8‑5 bits: ${caii_msb} — ${caii_msb === '1011' ? 'RuPay Version IAD Format (“B”)' : 'Other'}`);
+      out.push(`  4‑1 bits: ${caii_lsb} — ${caii_lsb === '1011' ? 'CCD Version 4.1 Cryptogram Version' : 'Other'}\n`);
+
+      out.push(`DKI            : ${hex.slice(10, 12)}\n`);
+
+      // CVR (bytes 6 to 13)
+      const cvrHex = hex.slice(12, 28);
+      out.push(`CVR (8 bytes)  : ${cvrHex}`);
+      const cvrBins = [];
+      for (let i = 0; i < 8; i++) {
+        cvrBins[i] = hexToBin(cvrHex.substr(i * 2, 2));
+      }
+
+      // Byte 1: AC bits + authentication flags
+      const b1 = cvrBins[0];
+      const ac2 = sliceBits(b1, 0, 2), ac1 = sliceBits(b1, 2, 2);
+      out.push(`  [CVR b1]`);
+      out.push(`    Second Generate AC: ${ac2} — ${['AAC','TC','Not requested','RFU'][parseInt(ac2,2)]}`);
+      out.push(`    First Generate AC : ${ac1} — ${['AAC','TC','ARQC','RFU'][parseInt(ac1,2)]}`);
+      out.push(`    CDA performed     : ${b1[4]}`);
+      out.push(`    qDDA signature    : ${b1[5]}`);
+      out.push(`    IssuerAuth NOT perf.: ${b1[6]}`);
+      out.push(`    IssuerAuth failed : ${b1[7]}`);
+
+      // Byte 2: PIN flags
+      const b2 = cvrBins[1];
+      const pinTry = sliceBits(b2, 0, 4);
+      out.push(`\n  [CVR b2]`);
+      out.push(`    PIN Try Counter            : ${parseInt(pinTry,2)}`);
+      out.push(`    Offline PIN performed      : ${b2[4]}`);
+      out.push(`    Offline PIN not verified   : ${b2[5]}`);
+      out.push(`    PIN Try limit exceeded     : ${b2[6]}`);
+      out.push(`    Last Online Txn not comp.  : ${b2[7]}`);
+
+      // Byte 3
+      const b3 = cvrBins[2];
+      out.push(`\n  [CVR b3]`);
+      ['IssuerAuth failed prev txn','IssuerAuth not performed after online auth prev',
+       'Go online on next txn','Balance limit exceeded','Additional check match',
+       'App blocked by issuer','Void mismatch','Unable to go online prev'].forEach((label, idx) => {
+        out.push(`    ${b3[idx]} — ${label}`);
+      });
+
+      // Byte 4
+      const b4 = cvrBins[3];
+      out.push(`\n  [CVR b4]`);
+      out.push(`    Script Counter (bits 8-5): ${sliceBits(b4, 0, 4)}`);
+      ['Script command fail','Offline Data Auth failed','RFU','Unable to go online'].forEach((label, idx) => {
+        out.push(`    ${b4[4+idx]} — ${label}`);
+      });
+
+      // Byte 5
+      const b5 = cvrBins[4];
+      out.push(`\n  [CVR b5]`);
+      ['Txn type not supported','RFU','Txn offline accepted','RFU',
+       'Service Key planted','Service Balance recvd','Void orig not found','Void orig expired'].forEach((label, idx) => {
+        out.push(`    ${b5[idx]} — ${label}`);
+      });
+
+      // Byte 6
+      const b6 = cvrBins[5];
+      out.push(`\n  [CVR b6]`);
+      ['Service not allowed','New Service Creation','Service reallocation',
+       'Txn initiated w/ Service','Service update failed','Service updated',
+       'Service created global wallet','Service Process skipped'].forEach((label, idx) => {
+        out.push(`    ${b6[idx]} — ${label}`);
+      });
+
+      // Byte 7
+      const b7 = cvrBins[6];
+      out.push(`\n  [CVR b7]`);
+      out.push(`    ${b7[0]} — Offline Balance insufficient`);
+      out.push(`    ${b7[1]} — CVM Limit exceeded`);
+      out.push(`    ${b7[2]} — Invalid Void Transaction`);
+      out.push(`    ${sliceBits(b7,3,5)} — RFU`);
+
+      // Byte 8
+      const b8 = cvrBins[7];
+      out.push(`\n  [CVR b8]`);
+      ['Service Signature failed','Service Summary failed','Critical Service Update',
+       'Offline Spending Limit exceeded','Offline Txn Limit exceeded','RFU',
+       'Txn date format incorrect','Txn time format incorrect'].forEach((label, idx) => {
+        out.push(`    ${b8[idx]} — ${label}`);
+      });
+
+      // Counters
+      const countersHex = hex.slice(28, 56);
+      out.push(`\nCounters (28‑55): ${countersHex}`);
+      out.push(`  Global balance   : ${countersHex.slice(0,12)}`);
+      out.push(`  Service balance  : ${countersHex.slice(12,24)}`);
+      out.push(`  RFU              : ${countersHex.slice(24,28)}`);
+
+      // IDD
+      const iddHex = hex.slice(56, 70);
+      out.push(`\nIDD (56‑69): ${iddHex}`);
+      out.push(`  Service ID                   : ${iddHex.slice(0,4)}`);
+      out.push(`  Service Management Info      : ${iddHex.slice(4,8)}`);
+      out.push(`  Service Compatibility Ver    : ${iddHex.slice(8,10)}`);
+      out.push(`  Host Compatibility Ver       : ${iddHex.slice(10,12)}`);
+      out.push(`  RFU                          : ${iddHex.slice(12,14)}`);
+
+      document.getElementById('output').textContent = out.join('\n');
+    }
+  </script>
+</body>
+</html>

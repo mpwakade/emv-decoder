@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Card Hash Generator - Secure SHA-256</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #0d1421;
+  --bg-secondary: #1a2332;
+  --bg-card: #253142;
+  --border-color: #364152;
+  --accent-primary: #ff6b35;
+  --accent-secondary: #f7931e;
+  --text-primary: #f0f4f8;
+  --text-secondary: #a8b5c7;
+  --text-muted: #798a9f;
+  --error: #ff4757;
+  --warning: #ffa502;
+  --success: #26de81;
+  --info: #4b7bec;
+  --shadow-glow: rgba(255, 107, 53, 0.2);
+}
+
+body {
+  font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Circuit board pattern background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated accent glow */
+body::after {
+  content: '';
+  position: fixed;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.08) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: rotate-glow 15s linear infinite;
+  z-index: 0;
+}
+
+@keyframes rotate-glow {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 50px;
+  animation: slideDown 0.6s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(255, 107, 53, 0.15);
+  border: 1px solid rgba(255, 107, 53, 0.4);
+  border-radius: 20px;
+  color: var(--accent-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 107, 53, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(255, 107, 53, 0.5); }
+}
+
+h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+/* Main Card */
+.hash-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.6s ease-out 0.2s backwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.field {
+  margin-bottom: 28px;
+}
+
+.field:last-of-type {
+  margin-bottom: 0;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+input:focus, textarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input[type="password"] {
+  letter-spacing: 0.2em;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: var(--accent-primary);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+textarea:read-only {
+  background: rgba(0, 0, 0, 0.2);
+  cursor: default;
+}
+
+.btn {
+  padding: 16px 32px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: 100%;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #0d1421;
+  box-shadow: 0 4px 15px var(--shadow-glow);
+  margin-top: 8px;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 25px rgba(255, 107, 53, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  background: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.button-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  padding: 12px 24px;
+  font-size: 0.9rem;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-primary);
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.status {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  min-height: 1.5rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.status.success {
+  color: var(--success);
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.status.processing {
+  color: var(--info);
+}
+
+.status::before {
+  margin-right: 8px;
+}
+
+.status.success::before {
+  content: '✓';
+}
+
+.status.error::before {
+  content: '⚠';
+}
+
+.status.processing::before {
+  content: '⚡';
+}
+
+/* Info box */
+.info-box {
+  background: rgba(75, 123, 236, 0.1);
+  border: 1px solid rgba(75, 123, 236, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 32px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.info-box strong {
+  color: var(--info);
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .hash-card {
+    padding: 28px;
+  }
+  
+  .button-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-badge">SHA-256 Cryptographic Hash</div>
+    <h1>Card Hash Generator</h1>
+    <p class="subtitle">Secure One-Way Hash Generation for Card Data</p>
+  </div>
+
+  <div class="hash-card">
+    <div class="field">
+      <label class="field-label" for="cardNo">Card Number</label>
+      <div class="input-wrapper">
+        <input 
+          type="text" 
+          id="cardNo" 
+          placeholder="Enter card number (e.g., 1234567890123456)"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="salt">Security Key / Salt</label>
+      <div class="input-wrapper">
+        <input 
+          type="password" 
+          id="salt" 
+          placeholder="Enter your security key or salt value"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button class="toggle-password" id="toggleSalt" type="button" title="Show/Hide">
+          👁️
+        </button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="hashBtn">
+      <span style="position: relative; z-index: 1;">🔐 Generate Hash</span>
+    </button>
+
+    <div id="status" class="status"></div>
+
+    <div class="field" style="margin-top: 28px;">
+      <label class="field-label" for="output">Generated SHA-256 Hash</label>
+      <textarea 
+        id="output" 
+        readonly 
+        placeholder="Your secure hash will appear here after generation..."
+      ></textarea>
+      
+      <div class="button-group">
+        <button class="btn btn-secondary" id="copyBtn" style="display: none;">
+          <span style="position: relative; z-index: 1;">📋 Copy Hash</span>
+        </button>
+        <button class="btn btn-secondary" id="clearBtn">
+          <span style="position: relative; z-index: 1;">🗑️ Clear All</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>ℹ️ How it works</strong>
+      SHA-256 creates a unique 64-character hash by combining your card number with a security key. This one-way hash cannot be reversed to reveal the original data, making it ideal for secure storage and verification.
+    </div>
+  </div>
+</div>
+
+<script>
+function bytesToHexLower(bytes) {
+  const hex = [];
+  for (let i = 0; i < bytes.length; i++) {
+    const v = bytes[i];
+    hex.push((v >>> 4).toString(16));
+    hex.push((v & 0x0f).toString(16));
+  }
+  return hex.join('');
+}
+
+async function sha256HexLower(str) {
+  const enc = new TextEncoder();
+  const data = enc.encode(str);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return bytesToHexLower(new Uint8Array(digest));
+}
+
+const cardNoInput = document.getElementById('cardNo');
+const saltInput = document.getElementById('salt');
+const toggleSalt = document.getElementById('toggleSalt');
+const hashBtn = document.getElementById('hashBtn');
+const status = document.getElementById('status');
+const output = document.getElementById('output');
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+// Toggle password visibility
+toggleSalt.addEventListener('click', () => {
+  if (saltInput.type === 'password') {
+    saltInput.type = 'text';
+    toggleSalt.textContent = '🙈';
+  } else {
+    saltInput.type = 'password';
+    toggleSalt.textContent = '👁️';
+  }
+});
+
+// Generate hash
+hashBtn.addEventListener('click', async () => {
+  const cardNo = cardNoInput.value.trim();
+  const salt = saltInput.value.trim();
+
+  if (!cardNo || !salt) {
+    status.textContent = 'Please fill in both fields';
+    status.className = 'status error';
+    return;
+  }
+
+  try {
+    hashBtn.disabled = true;
+    status.textContent = 'Generating secure hash...';
+    status.className = 'status processing';
+    
+    const input = cardNo + salt;
+    const hex = await sha256HexLower(input);
+    
+    output.value = hex;
+    copyBtn.style.display = 'block';
+    status.textContent = 'Hash generated successfully';
+    status.className = 'status success';
+  } catch (e) {
+    console.error(e);
+    status.textContent = 'Error generating hash';
+    status.className = 'status error';
+    output.value = '';
+  } finally {
+    hashBtn.disabled = false;
+  }
+});
+
+// Copy to clipboard
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(output.value);
+    const originalHTML = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<span style="position: relative; z-index: 1;">✓ Copied!</span>';
+    setTimeout(() => {
+      copyBtn.innerHTML = originalHTML;
+    }, 2000);
+  } catch (e) {
+    output.select();
+    document.execCommand('copy');
+  }
+});
+
+// Clear all fields
+clearBtn.addEventListener('click', () => {
+  cardNoInput.value = '';
+  saltInput.value = '';
+  output.value = '';
+  status.textContent = '';
+  status.className = 'status';
+  copyBtn.style.display = 'none';
+  cardNoInput.focus();
+});
+
+// Enter key support
+[cardNoInput, saltInput].forEach(input => {
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      hashBtn.click();
+    }
+  });
+});
+</script>
+</body>
+</html>

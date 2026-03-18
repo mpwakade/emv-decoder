@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Device Info</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --border: #1e2330;
+      --accent: #00e5ff;
+      --accent2: #ff4d6d;
+      --accent3: #b8ff57;
+      --text: #e0e8f0;
+      --muted: #4a5568;
+      --mono: 'Space Mono', monospace;
+      --display: 'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 24px;
+      overflow-x: hidden;
+    }
+
+    /* Grid noise texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      animation: fadeDown 0.5s ease both;
+    }
+
+    .header-left h1 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .header-left h1 span { color: var(--accent); }
+    .header-left p {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.68rem;
+      color: var(--accent3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      background: var(--accent3);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    /* ── Cards grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent-line, var(--accent));
+      opacity: 0.7;
+    }
+
+    /* stagger delays */
+    .card:nth-child(1) { animation-delay: 0.05s; --accent-line: var(--accent); }
+    .card:nth-child(2) { animation-delay: 0.1s;  --accent-line: var(--accent2); }
+    .card:nth-child(3) { animation-delay: 0.15s; --accent-line: var(--accent3); }
+    .card:nth-child(4) { animation-delay: 0.2s;  --accent-line: #a78bfa; }
+    .card:nth-child(5) { animation-delay: 0.25s; --accent-line: #fb923c; }
+    .card:nth-child(6) { animation-delay: 0.3s;  --accent-line: var(--accent2); }
+
+    .card-label {
+      font-size: 0.62rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .card-icon {
+      font-size: 1rem;
+      line-height: 1;
+      margin-right: 2px;
+    }
+
+    .card-value {
+      font-size: 0.85rem;
+      color: var(--text);
+      word-break: break-word;
+      line-height: 1.7;
+    }
+    .card-value .highlight {
+      font-size: 1.5rem;
+      font-family: var(--display);
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+    .card-value .sub {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    /* Battery bar */
+    .battery-bar-wrap {
+      margin-top: 10px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .battery-bar {
+      height: 100%;
+      border-radius: 10px;
+      background: var(--accent3);
+      transition: width 1s ease;
+      width: 0%;
+    }
+    .battery-bar.charging { background: var(--accent); }
+    .battery-bar.low { background: var(--accent2); }
+
+    /* CPU cores display */
+    .core-dots {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .core-dot {
+      width: 10px; height: 10px;
+      background: #a78bfa;
+      border-radius: 2px;
+      opacity: 0.5;
+      animation: corePulse 2s infinite;
+    }
+
+    /* UA scroll box */
+    .ua-box {
+      font-size: 0.68rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-top: 8px;
+      word-break: break-all;
+      line-height: 1.6;
+      max-height: 70px;
+      overflow-y: auto;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+    @keyframes corePulse {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="header-left">
+      <h1>Device <span>Metrics</span></h1>
+      <p>System Diagnostics Panel</p>
+    </div>
+    <div class="live-badge">
+      <span class="live-dot"></span> Live
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- Device -->
+    <div class="card" style="grid-column: span 2;">
+      <div class="card-label"><span class="card-icon">🖥</span> Device</div>
+      <div class="card-value">
+        <span class="highlight" id="device-name">Detecting…</span>
+        <div class="ua-box" id="device-ua"></div>
+      </div>
+    </div>
+
+    <!-- Screen -->
+    <div class="card">
+      <div class="card-label"><span class="card-icon">📐</span> Screen</div>
+      <div class="card-value">
+        <span class="highlight" id="screen-res">—</span>
+        <span class="sub" id="screen-dpr"></span>
+      </div>
+    </div>
+
+    <!-- Memory -->
+    <div class="card">
+      <div class="card-label"><span class="card-icon">💾</span> Memory</div>
+      <div class="card-value">
+        <span class="highlight" id="memory-val">—</span>
+        <span class="sub" id="memory-sub"></span>
+      </div>
+    </div>
+
+    <!-- CPU -->
+    <div class="card">
+      <div class="card-label"><span class="card-icon">⚙️</span> CPU Threads</div>
+      <div class="card-value">
+        <span class="highlight" id="cpu-val">—</span>
+        <div class="core-dots" id="core-dots"></div>
+      </div>
+    </div>
+
+    <!-- Network -->
+    <div class="card">
+      <div class="card-label"><span class="card-icon">📡</span> Network</div>
+      <div class="card-value">
+        <span class="highlight" id="net-type">—</span>
+        <span class="sub" id="net-sub"></span>
+      </div>
+    </div>
+
+    <!-- Battery -->
+    <div class="card" style="grid-column: span 2;">
+      <div class="card-label"><span class="card-icon">🔋</span> Battery</div>
+      <div class="card-value">
+        <span class="highlight" id="battery-pct">Loading…</span>
+        <span class="sub" id="battery-sub"></span>
+        <div class="battery-bar-wrap"><div class="battery-bar" id="battery-bar"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Device name ──────────────────────────────────────────
+  const ua = navigator.userAgent;
+  document.getElementById('device-ua').textContent = ua;
+
+  function guessDevice(ua) {
+    if (/iPhone/.test(ua))       return 'iPhone';
+    if (/iPad/.test(ua))         return 'iPad';
+    if (/Android/.test(ua)) {
+      const m = ua.match(/;\s*([^;)]+)\sBuild/);
+      return m ? m[1].trim() : 'Android Device';
+    }
+    if (/Mac OS X/.test(ua))     return 'Mac';
+    if (/Windows NT/.test(ua))   return 'Windows PC';
+    if (/Linux/.test(ua))        return 'Linux Device';
+    return 'Unknown Device';
+  }
+  document.getElementById('device-name').textContent = guessDevice(ua);
+
+  // ── Screen ───────────────────────────────────────────────
+  const W = window.screen.width, H = window.screen.height;
+  const dpr = window.devicePixelRatio || 1;
+  document.getElementById('screen-res').textContent = `${W} × ${H}`;
+  document.getElementById('screen-dpr').textContent =
+    `${W * dpr} × ${H * dpr} physical px · ${dpr}x DPR`;
+
+  // ── Memory ───────────────────────────────────────────────
+  if (navigator.deviceMemory) {
+    document.getElementById('memory-val').textContent = navigator.deviceMemory + ' GB';
+    document.getElementById('memory-sub').textContent = 'approximate device RAM';
+  } else {
+    document.getElementById('memory-val').textContent = 'N/A';
+    document.getElementById('memory-sub').textContent = 'not exposed by this browser';
+  }
+
+  // ── CPU ──────────────────────────────────────────────────
+  const cores = navigator.hardwareConcurrency || 0;
+  document.getElementById('cpu-val').textContent = cores ? `${cores} cores` : 'N/A';
+  const dotsEl = document.getElementById('core-dots');
+  for (let i = 0; i < cores; i++) {
+    const d = document.createElement('div');
+    d.className = 'core-dot';
+    d.style.animationDelay = (i * 0.15) + 's';
+    dotsEl.appendChild(d);
+  }
+
+  // ── Network ──────────────────────────────────────────────
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conn) {
+    document.getElementById('net-type').textContent = (conn.effectiveType || '?').toUpperCase();
+    const parts = [];
+    if (conn.downlink)  parts.push(`↓ ${conn.downlink} Mbps`);
+    if (conn.rtt)       parts.push(`RTT ${conn.rtt} ms`);
+    if (conn.saveData)  parts.push('⚡ Data Saver ON');
+    document.getElementById('net-sub').textContent = parts.join(' · ') || 'no extra data';
+  } else {
+    document.getElementById('net-type').textContent = 'N/A';
+    document.getElementById('net-sub').textContent = 'Network API not supported';
+  }
+
+  // ── Battery ──────────────────────────────────────────────
+  function renderBattery(battery) {
+    const pct = Math.round(battery.level * 100);
+    const charging = battery.charging;
+    document.getElementById('battery-pct').textContent = `${pct}%`;
+    document.getElementById('battery-sub').textContent = charging ? '⚡ Charging' : 'On battery';
+
+    const bar = document.getElementById('battery-bar');
+    bar.style.width = pct + '%';
+    bar.className = 'battery-bar' + (charging ? ' charging' : pct < 20 ? ' low' : '');
+  }
+
+  if (navigator.getBattery) {
+    navigator.getBattery().then(battery => {
+      renderBattery(battery);
+      battery.addEventListener('levelchange',   () => renderBattery(battery));
+      battery.addEventListener('chargingchange', () => renderBattery(battery));
+    });
+  } else {
+    document.getElementById('battery-pct').textContent = 'N/A';
+    document.getElementById('battery-sub').textContent = 'Battery API not supported';
+  }
+</script>
+</body>
+</html>

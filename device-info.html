@@ -377,50 +377,71 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             
+            const isLocal = window.location.protocol === 'file:';
+            if (isLocal) {
+                console.warn("Running from file://. Some Web APIs (Storage, Battery) may report inaccurate or restricted data due to browser security. Host on GitHub pages or a local server for best results.");
+            }
+
             // 1. Browser & OS Info
             const ua = navigator.userAgent;
-            const platform = (navigator.userAgentData?.platform || navigator.platform || 'Unknown').toString();
-            document.getElementById('val-platform').textContent = platform;
+            let parsedOS = "Unknown OS";
+            if (ua.indexOf("Win") !== -1) parsedOS = "Windows";
+            if (ua.indexOf("Mac") !== -1) parsedOS = "MacOS";
+            if (ua.indexOf("Linux") !== -1) parsedOS = "Linux";
+            if (ua.indexOf("Android") !== -1) parsedOS = "Android";
+            if (ua.indexOf("like Mac") !== -1) parsedOS = "iOS";
+
+            const browserName = (// Parse top browsers roughly
+                ua.match(/Edg\//i) ? "Edge" :
+                ua.match(/Chrome\//i) ? "Chrome" :
+                ua.match(/Firefox\//i) ? "Firefox" :
+                ua.match(/Safari\//i) ? "Safari" : "Unknown Browser"
+            );
+
+            const platform = navigator.userAgentData?.platform || navigator.platform || parsedOS;
+            
+            document.getElementById('val-platform').textContent = `${platform} (${browserName})`;
             document.getElementById('val-ua').textContent = ua;
             document.getElementById('val-lang').textContent = navigator.language;
 
             // 2. Processor
             const cores = navigator.hardwareConcurrency;
-            document.getElementById('val-cores').textContent = cores ? `${cores} Cores` : 'Unsupported / Hidden';
+            document.getElementById('val-cores').textContent = cores ? `${cores} Logical Cores` : 'Hidden by Browser';
             
             // 3. Memory
             const ram = navigator.deviceMemory;
             if (ram) {
-                // Returns max up to 8 for anti-fingerprinting
-                const displayRam = ram >= 8 ? "8+ GB" : `${ram} GB`;
+                const displayRam = ram >= 8 ? "8+ GB (Browser Max)" : `${ram} GB`;
                 document.getElementById('val-ram').textContent = displayRam;
-                document.getElementById('prog-ram-text').textContent = displayRam;
+                document.getElementById('prog-ram-text').textContent = "Capped at 8GB for privacy";
                 
-                // Animate progress to a visual representation of the device RAM
                 setTimeout(() => {
                     const progress = Math.min((ram / 8) * 100, 100);
                     document.getElementById('prog-ram-fill').style.width = `${progress}%`;
                 }, 500);
             } else {
-                document.getElementById('val-ram').textContent = 'API not supported';
-                document.getElementById('prog-ram-text').textContent = 'N/A';
+                document.getElementById('val-ram').textContent = 'Not Supported';
+                document.getElementById('prog-ram-text').textContent = 'API Blocked';
             }
 
-            // 4. Storage
+            // 4. Storage (Browsers only expose Quota for the specific website, NOT device storage)
             if (navigator.storage && navigator.storage.estimate) {
                 try {
                     const estimate = await navigator.storage.estimate();
-                    const quotaGB = (estimate.quota / (1024 * 1024 * 1024)).toFixed(2);
-                    const usageMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+                    const quotaGB = (estimate.quota / (1024 * 1024 * 1024)).toFixed(1);
+                    const usageMB = (estimate.usage / (1024 * 1024)).toFixed(1);
                     
-                    document.getElementById('val-storage-total').textContent = `${quotaGB} GB`;
-                    document.getElementById('prog-storage-text').textContent = `${usageMB} MB / ${quotaGB} GB`;
-                    
-                    setTimeout(() => {
-                        const percent = estimate.quota > 0 ? (estimate.usage / estimate.quota) * 100 : 0;
-                        // Minimum width so it's visible, unless exactly 0
-                        document.getElementById('prog-storage-fill').style.width = `${Math.max(percent, 2)}%`;
-                    }, 500);
+                    if (isLocal || estimate.quota === 0) {
+                       document.getElementById('val-storage-total').textContent = `Unavailable locally`;
+                       document.getElementById('prog-storage-text').textContent = `Needs to be hosted`;
+                    } else {
+                        document.getElementById('val-storage-total').textContent = `~${quotaGB} GB Allocated`;
+                        document.getElementById('prog-storage-text').textContent = `${usageMB} MB / ${quotaGB} GB`;
+                        setTimeout(() => {
+                            const percent = estimate.quota > 0 ? (estimate.usage / estimate.quota) * 100 : 0;
+                            document.getElementById('prog-storage-fill').style.width = `${Math.max(percent, 2)}%`;
+                        }, 500);
+                    }
                 } catch(e) {
                     document.getElementById('val-storage-total').textContent = 'Access denied';
                 }
@@ -432,19 +453,17 @@
             if (navigator.getBattery) {
                 try {
                     const battery = await navigator.getBattery();
-                    
                     const updateBattery = () => {
                         const level = Math.round(battery.level * 100);
-                        const status = battery.charging ? 'Charging ⚡' : 'Discharging';
+                        const status = (level === 100) ? 'Full' : (battery.charging ? 'Charging ⚡' : 'Discharging');
                         
                         document.getElementById('val-battery-status').textContent = status;
                         document.getElementById('prog-battery-text').textContent = `${level}%`;
                         document.getElementById('prog-battery-fill').style.width = `${level}%`;
                         
-                        // Color styling based on charge
                         const fillEl = document.getElementById('prog-battery-fill');
                         if(level <= 20 && !battery.charging) {
-                            fillEl.style.backgroundColor = '#ef4444'; // Red
+                            fillEl.style.backgroundColor = '#ef4444';
                             fillEl.style.boxShadow = '0 0 10px #ef4444';
                         } else {
                             fillEl.style.backgroundColor = 'var(--accent-4)';
@@ -456,10 +475,10 @@
                     battery.addEventListener('levelchange', updateBattery);
                     battery.addEventListener('chargingchange', updateBattery);
                 } catch(e) {
-                    document.getElementById('val-battery-status').textContent = 'Access error';
+                    document.getElementById('val-battery-status').textContent = 'Blocked by Browser';
                 }
             } else {
-                document.getElementById('val-battery-status').textContent = 'API not supported';
+                document.getElementById('val-battery-status').textContent = 'Not Supported (Firefox/Safari)';
                 document.getElementById('prog-battery-text').textContent = 'N/A';
             }
 
@@ -471,7 +490,6 @@
                     document.getElementById('val-network-speed').textContent = conn.downlink ? `${conn.downlink} Mbps` : 'Unknown';
                     document.getElementById('val-network-rtt').textContent = conn.rtt ? `${conn.rtt} ms` : 'Unknown';
                 };
-                
                 updateNetwork();
                 conn.addEventListener('change', updateNetwork);
             } else {

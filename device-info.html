@@ -1,402 +1,485 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Device Info</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --bg: #0a0c10;
-      --surface: #111318;
-      --border: #1e2330;
-      --accent: #00e5ff;
-      --accent2: #ff4d6d;
-      --accent3: #b8ff57;
-      --text: #e0e8f0;
-      --muted: #4a5568;
-      --mono: 'Space Mono', monospace;
-      --display: 'Syne', sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Device Metrics Dashboard - A sleek, modern dashboard showcasing real-time device information from your browser.">
+    <title>Device Metrics Dashboard</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-1: #09090b;
+            --bg-color-2: #18181b;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-1: #3b82f6; /* Blue */
+            --accent-2: #8b5cf6; /* Purple */
+            --accent-3: #10b981; /* Green */
+            --accent-4: #f59e0b; /* Orange */
+            --accent-5: #ec4899; /* Pink */
+        }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
 
-    body {
-      font-family: var(--mono);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 32px 24px;
-      overflow-x: hidden;
-    }
+        body {
+            background-color: var(--bg-color-1);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
 
-    /* Grid noise texture */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
+        /* Ambient Glow Background */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 50vw;
+            height: 50vw;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            animation: float 20s infinite alternate ease-in-out;
+            opacity: 0.15;
+        }
 
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
+        body::before {
+            background: var(--accent-1);
+            top: -10vw;
+            left: -10vw;
+        }
 
-    /* ── Header ── */
-    .header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      margin-bottom: 40px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 20px;
-      animation: fadeDown 0.5s ease both;
-    }
+        body::after {
+            background: var(--accent-2);
+            bottom: -10vw;
+            right: -10vw;
+            animation-delay: -10s;
+        }
 
-    .header-left h1 {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: clamp(1.8rem, 5vw, 2.8rem);
-      letter-spacing: -1px;
-      line-height: 1;
-    }
-    .header-left h1 span { color: var(--accent); }
-    .header-left p {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-top: 6px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5vw, 5vw) scale(1.2); }
+        }
 
-    .live-badge {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 0.68rem;
-      color: var(--accent3);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-    .live-dot {
-      width: 7px; height: 7px;
-      background: var(--accent3);
-      border-radius: 50%;
-      animation: pulse 1.5s infinite;
-    }
+        header {
+            text-align: center;
+            padding: 3rem 1rem 1rem;
+        }
 
-    /* ── Cards grid ── */
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-    @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 22px;
-      position: relative;
-      overflow: hidden;
-      animation: fadeUp 0.5s ease both;
-      transition: border-color 0.25s, transform 0.25s;
-    }
-    .card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--accent-line, var(--accent));
-      opacity: 0.7;
-    }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
 
-    /* stagger delays */
-    .card:nth-child(1) { animation-delay: 0.05s; --accent-line: var(--accent); }
-    .card:nth-child(2) { animation-delay: 0.1s;  --accent-line: var(--accent2); }
-    .card:nth-child(3) { animation-delay: 0.15s; --accent-line: var(--accent3); }
-    .card:nth-child(4) { animation-delay: 0.2s;  --accent-line: #a78bfa; }
-    .card:nth-child(5) { animation-delay: 0.25s; --accent-line: #fb923c; }
-    .card:nth-child(6) { animation-delay: 0.3s;  --accent-line: var(--accent2); }
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
 
-    .card-label {
-      font-size: 0.62rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .card-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+        /* Glassmorphism Card styling */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .card-icon {
-      font-size: 1rem;
-      line-height: 1;
-      margin-right: 2px;
-    }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
 
-    .card-value {
-      font-size: 0.85rem;
-      color: var(--text);
-      word-break: break-word;
-      line-height: 1.7;
-    }
-    .card-value .highlight {
-      font-size: 1.5rem;
-      font-family: var(--display);
-      font-weight: 700;
-      color: var(--accent);
-      display: block;
-      line-height: 1.2;
-      margin-bottom: 2px;
-    }
-    .card-value .sub {
-      font-size: 0.68rem;
-      color: var(--muted);
-    }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
 
-    /* Battery bar */
-    .battery-bar-wrap {
-      margin-top: 10px;
-      height: 6px;
-      background: var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .battery-bar {
-      height: 100%;
-      border-radius: 10px;
-      background: var(--accent3);
-      transition: width 1s ease;
-      width: 0%;
-    }
-    .battery-bar.charging { background: var(--accent); }
-    .battery-bar.low { background: var(--accent2); }
+        .card:hover::before {
+            transform: translateX(100%);
+        }
 
-    /* CPU cores display */
-    .core-dots {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-    .core-dot {
-      width: 10px; height: 10px;
-      background: #a78bfa;
-      border-radius: 2px;
-      opacity: 0.5;
-      animation: corePulse 2s infinite;
-    }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
 
-    /* UA scroll box */
-    .ua-box {
-      font-size: 0.68rem;
-      color: var(--muted);
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      margin-top: 8px;
-      word-break: break-all;
-      line-height: 1.6;
-      max-height: 70px;
-      overflow-y: auto;
-    }
+        .card-icon {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+        }
 
-    /* ── Animations ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.7); }
-    }
-    @keyframes corePulse {
-      0%, 100% { opacity: 0.5; }
-      50%       { opacity: 1; }
-    }
-  </style>
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            bordertop: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .info-value {
+            font-weight: 500;
+            font-size: 1rem;
+            text-align: right;
+        }
+
+        /* Progress Bar styling */
+        .progress-container {
+            margin-top: 0.5rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .progress-track {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 1s cubic-bezier(0.1, 0.8, 0.2, 1);
+            position: relative;
+        }
+
+        /* Specific card accents */
+        .card-processor .card-icon { color: var(--accent-1); background: rgba(59, 130, 246, 0.1); }
+        .card-memory .card-icon { color: var(--accent-2); background: rgba(139, 92, 246, 0.1); }
+        .card-storage .card-icon { color: var(--accent-3); background: rgba(16, 185, 129, 0.1); }
+        .card-battery .card-icon { color: var(--accent-4); background: rgba(245, 158, 11, 0.1); }
+        .card-network .card-icon { color: var(--accent-5); background: rgba(236, 72, 153, 0.1); }
+        
+        .card-processor .progress-fill { background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); }
+        .card-memory .progress-fill { background: var(--accent-2); box-shadow: 0 0 10px var(--accent-2); }
+        .card-storage .progress-fill { background: var(--accent-3); box-shadow: 0 0 10px var(--accent-3); }
+        .card-battery .progress-fill { background: var(--accent-4); box-shadow: 0 0 10px var(--accent-4); }
+
+        .loading {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .disclaimer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            main { padding: 1rem; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
 
-  <header class="header">
-    <div class="header-left">
-      <h1>Device <span>Metrics</span></h1>
-      <p>System Diagnostics Panel</p>
+    <header>
+        <h1>Device Metrics</h1>
+        <p class="subtitle">System statistics directly from your browser APIs</p>
+    </header>
+
+    <main id="dashboard">
+        <!-- Device Info -->
+        <article class="card">
+            <div class="card-header">
+                <div class="card-icon" style="color: #fff; background: rgba(255,255,255,0.1)">📱</div>
+                <h2 class="card-title">Browser & OS</h2>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Platform</span>
+                <span class="info-value" id="val-platform">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">User Agent</span>
+                <span class="info-value" id="val-ua" style="font-size: 0.8rem; max-width: 60%; word-break: break-all;">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Language</span>
+                <span class="info-value" id="val-lang">Loading...</span>
+            </div>
+        </article>
+
+        <!-- Processor -->
+        <article class="card card-processor">
+            <div class="card-header">
+                <div class="card-icon">⚙️</div>
+                <h2 class="card-title">Processor</h2>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Logical Cores</span>
+                <span class="info-value" id="val-cores">Loading...</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span style="color: var(--text-secondary)">Utilization Metric</span>
+                    <span>N/A (Security Sandbox)</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: 100%; opacity: 0.3;"></div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Memory -->
+        <article class="card card-memory">
+            <div class="card-header">
+                <div class="card-icon">🧠</div>
+                <h2 class="card-title">Memory (RAM)</h2>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Device Memory</span>
+                <span class="info-value" id="val-ram">Loading...</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span style="color: var(--text-secondary)">Est. Capacity</span>
+                    <span id="prog-ram-text">Loading...</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="prog-ram-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Storage -->
+        <article class="card card-storage">
+            <div class="card-header">
+                <div class="card-icon">💾</div>
+                <h2 class="card-title">Origin Storage</h2>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Available for Origin</span>
+                <span class="info-value" id="val-storage-total">Loading...</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span style="color: var(--text-secondary)">Usage limits</span>
+                    <span id="prog-storage-text">Loading...</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="prog-storage-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Battery -->
+        <article class="card card-battery">
+            <div class="card-header">
+                <div class="card-icon">🔋</div>
+                <h2 class="card-title">Battery</h2>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-value" id="val-battery-status">Loading...</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span style="color: var(--text-secondary)">Level</span>
+                    <span id="prog-battery-text">Loading...</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="prog-battery-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Network -->
+        <article class="card card-network">
+            <div class="card-header">
+                <div class="card-icon">🌐</div>
+                <h2 class="card-title">Network</h2>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Connection Type</span>
+                <span class="info-value" id="val-network-type">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Downlink</span>
+                <span class="info-value" id="val-network-speed">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Latency (RTT)</span>
+                <span class="info-value" id="val-network-rtt">Loading...</span>
+            </div>
+        </article>
+    </main>
+
+    <div class="disclaimer">
+        * Web browsers strictly limit access to true hardware information for security and privacy.<br>
+        Metrics shown are estimates provided by modern browser APIs.
     </div>
-    <div class="live-badge">
-      <span class="live-dot"></span> Live
-    </div>
-  </header>
 
-  <div class="grid">
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            // 1. Browser & OS Info
+            const ua = navigator.userAgent;
+            const platform = (navigator.userAgentData?.platform || navigator.platform || 'Unknown').toString();
+            document.getElementById('val-platform').textContent = platform;
+            document.getElementById('val-ua').textContent = ua;
+            document.getElementById('val-lang').textContent = navigator.language;
 
-    <!-- Device -->
-    <div class="card" style="grid-column: span 2;">
-      <div class="card-label"><span class="card-icon">🖥</span> Device</div>
-      <div class="card-value">
-        <span class="highlight" id="device-name">Detecting…</span>
-        <div class="ua-box" id="device-ua"></div>
-      </div>
-    </div>
+            // 2. Processor
+            const cores = navigator.hardwareConcurrency;
+            document.getElementById('val-cores').textContent = cores ? `${cores} Cores` : 'Unsupported / Hidden';
+            
+            // 3. Memory
+            const ram = navigator.deviceMemory;
+            if (ram) {
+                // Returns max up to 8 for anti-fingerprinting
+                const displayRam = ram >= 8 ? "8+ GB" : `${ram} GB`;
+                document.getElementById('val-ram').textContent = displayRam;
+                document.getElementById('prog-ram-text').textContent = displayRam;
+                
+                // Animate progress to a visual representation of the device RAM
+                setTimeout(() => {
+                    const progress = Math.min((ram / 8) * 100, 100);
+                    document.getElementById('prog-ram-fill').style.width = `${progress}%`;
+                }, 500);
+            } else {
+                document.getElementById('val-ram').textContent = 'API not supported';
+                document.getElementById('prog-ram-text').textContent = 'N/A';
+            }
 
-    <!-- Screen -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon">📐</span> Screen</div>
-      <div class="card-value">
-        <span class="highlight" id="screen-res">—</span>
-        <span class="sub" id="screen-dpr"></span>
-      </div>
-    </div>
+            // 4. Storage
+            if (navigator.storage && navigator.storage.estimate) {
+                try {
+                    const estimate = await navigator.storage.estimate();
+                    const quotaGB = (estimate.quota / (1024 * 1024 * 1024)).toFixed(2);
+                    const usageMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+                    
+                    document.getElementById('val-storage-total').textContent = `${quotaGB} GB`;
+                    document.getElementById('prog-storage-text').textContent = `${usageMB} MB / ${quotaGB} GB`;
+                    
+                    setTimeout(() => {
+                        const percent = estimate.quota > 0 ? (estimate.usage / estimate.quota) * 100 : 0;
+                        // Minimum width so it's visible, unless exactly 0
+                        document.getElementById('prog-storage-fill').style.width = `${Math.max(percent, 2)}%`;
+                    }, 500);
+                } catch(e) {
+                    document.getElementById('val-storage-total').textContent = 'Access denied';
+                }
+            } else {
+                document.getElementById('val-storage-total').textContent = 'API not supported';
+            }
 
-    <!-- Memory -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon">💾</span> Memory</div>
-      <div class="card-value">
-        <span class="highlight" id="memory-val">—</span>
-        <span class="sub" id="memory-sub"></span>
-      </div>
-    </div>
+            // 5. Battery
+            if (navigator.getBattery) {
+                try {
+                    const battery = await navigator.getBattery();
+                    
+                    const updateBattery = () => {
+                        const level = Math.round(battery.level * 100);
+                        const status = battery.charging ? 'Charging ⚡' : 'Discharging';
+                        
+                        document.getElementById('val-battery-status').textContent = status;
+                        document.getElementById('prog-battery-text').textContent = `${level}%`;
+                        document.getElementById('prog-battery-fill').style.width = `${level}%`;
+                        
+                        // Color styling based on charge
+                        const fillEl = document.getElementById('prog-battery-fill');
+                        if(level <= 20 && !battery.charging) {
+                            fillEl.style.backgroundColor = '#ef4444'; // Red
+                            fillEl.style.boxShadow = '0 0 10px #ef4444';
+                        } else {
+                            fillEl.style.backgroundColor = 'var(--accent-4)';
+                            fillEl.style.boxShadow = '0 0 10px var(--accent-4)';
+                        }
+                    };
 
-    <!-- CPU -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon">⚙️</span> CPU Threads</div>
-      <div class="card-value">
-        <span class="highlight" id="cpu-val">—</span>
-        <div class="core-dots" id="core-dots"></div>
-      </div>
-    </div>
+                    updateBattery();
+                    battery.addEventListener('levelchange', updateBattery);
+                    battery.addEventListener('chargingchange', updateBattery);
+                } catch(e) {
+                    document.getElementById('val-battery-status').textContent = 'Access error';
+                }
+            } else {
+                document.getElementById('val-battery-status').textContent = 'API not supported';
+                document.getElementById('prog-battery-text').textContent = 'N/A';
+            }
 
-    <!-- Network -->
-    <div class="card">
-      <div class="card-label"><span class="card-icon">📡</span> Network</div>
-      <div class="card-value">
-        <span class="highlight" id="net-type">—</span>
-        <span class="sub" id="net-sub"></span>
-      </div>
-    </div>
-
-    <!-- Battery -->
-    <div class="card" style="grid-column: span 2;">
-      <div class="card-label"><span class="card-icon">🔋</span> Battery</div>
-      <div class="card-value">
-        <span class="highlight" id="battery-pct">Loading…</span>
-        <span class="sub" id="battery-sub"></span>
-        <div class="battery-bar-wrap"><div class="battery-bar" id="battery-bar"></div></div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-  // ── Device name ──────────────────────────────────────────
-  const ua = navigator.userAgent;
-  document.getElementById('device-ua').textContent = ua;
-
-  function guessDevice(ua) {
-    if (/iPhone/.test(ua))       return 'iPhone';
-    if (/iPad/.test(ua))         return 'iPad';
-    if (/Android/.test(ua)) {
-      const m = ua.match(/;\s*([^;)]+)\sBuild/);
-      return m ? m[1].trim() : 'Android Device';
-    }
-    if (/Mac OS X/.test(ua))     return 'Mac';
-    if (/Windows NT/.test(ua))   return 'Windows PC';
-    if (/Linux/.test(ua))        return 'Linux Device';
-    return 'Unknown Device';
-  }
-  document.getElementById('device-name').textContent = guessDevice(ua);
-
-  // ── Screen ───────────────────────────────────────────────
-  const W = window.screen.width, H = window.screen.height;
-  const dpr = window.devicePixelRatio || 1;
-  document.getElementById('screen-res').textContent = `${W} × ${H}`;
-  document.getElementById('screen-dpr').textContent =
-    `${W * dpr} × ${H * dpr} physical px · ${dpr}x DPR`;
-
-  // ── Memory ───────────────────────────────────────────────
-  if (navigator.deviceMemory) {
-    document.getElementById('memory-val').textContent = navigator.deviceMemory + ' GB';
-    document.getElementById('memory-sub').textContent = 'approximate device RAM';
-  } else {
-    document.getElementById('memory-val').textContent = 'N/A';
-    document.getElementById('memory-sub').textContent = 'not exposed by this browser';
-  }
-
-  // ── CPU ──────────────────────────────────────────────────
-  const cores = navigator.hardwareConcurrency || 0;
-  document.getElementById('cpu-val').textContent = cores ? `${cores} cores` : 'N/A';
-  const dotsEl = document.getElementById('core-dots');
-  for (let i = 0; i < cores; i++) {
-    const d = document.createElement('div');
-    d.className = 'core-dot';
-    d.style.animationDelay = (i * 0.15) + 's';
-    dotsEl.appendChild(d);
-  }
-
-  // ── Network ──────────────────────────────────────────────
-  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  if (conn) {
-    document.getElementById('net-type').textContent = (conn.effectiveType || '?').toUpperCase();
-    const parts = [];
-    if (conn.downlink)  parts.push(`↓ ${conn.downlink} Mbps`);
-    if (conn.rtt)       parts.push(`RTT ${conn.rtt} ms`);
-    if (conn.saveData)  parts.push('⚡ Data Saver ON');
-    document.getElementById('net-sub').textContent = parts.join(' · ') || 'no extra data';
-  } else {
-    document.getElementById('net-type').textContent = 'N/A';
-    document.getElementById('net-sub').textContent = 'Network API not supported';
-  }
-
-  // ── Battery ──────────────────────────────────────────────
-  function renderBattery(battery) {
-    const pct = Math.round(battery.level * 100);
-    const charging = battery.charging;
-    document.getElementById('battery-pct').textContent = `${pct}%`;
-    document.getElementById('battery-sub').textContent = charging ? '⚡ Charging' : 'On battery';
-
-    const bar = document.getElementById('battery-bar');
-    bar.style.width = pct + '%';
-    bar.className = 'battery-bar' + (charging ? ' charging' : pct < 20 ? ' low' : '');
-  }
-
-  if (navigator.getBattery) {
-    navigator.getBattery().then(battery => {
-      renderBattery(battery);
-      battery.addEventListener('levelchange',   () => renderBattery(battery));
-      battery.addEventListener('chargingchange', () => renderBattery(battery));
-    });
-  } else {
-    document.getElementById('battery-pct').textContent = 'N/A';
-    document.getElementById('battery-sub').textContent = 'Battery API not supported';
-  }
-</script>
+            // 6. Network
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (conn) {
+                const updateNetwork = () => {
+                    document.getElementById('val-network-type').textContent = conn.effectiveType ? conn.effectiveType.toUpperCase() : 'Unknown';
+                    document.getElementById('val-network-speed').textContent = conn.downlink ? `${conn.downlink} Mbps` : 'Unknown';
+                    document.getElementById('val-network-rtt').textContent = conn.rtt ? `${conn.rtt} ms` : 'Unknown';
+                };
+                
+                updateNetwork();
+                conn.addEventListener('change', updateNetwork);
+            } else {
+                document.getElementById('val-network-type').textContent = 'API not supported';
+                document.getElementById('val-network-speed').textContent = 'N/A';
+                document.getElementById('val-network-rtt').textContent = 'N/A';
+            }
+        });
+    </script>
 </body>
 </html>

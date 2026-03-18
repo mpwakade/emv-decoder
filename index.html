@@ -27,7 +27,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Animated background particles */
 body::before {
   content: '';
   position: absolute;
@@ -61,7 +60,6 @@ body::before {
   z-index: 1;
 }
 
-/* Header section */
 .header {
   text-align: center;
   margin-bottom: 50px;
@@ -111,7 +109,6 @@ h1 {
   letter-spacing: 0.01em;
 }
 
-/* Parser grid */
 .parser-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -208,7 +205,6 @@ h1 {
   font-weight: 500;
 }
 
-/* Info section */
 .info-section {
   background: rgba(30, 41, 59, 0.4);
   border: 1px solid rgba(75, 85, 99, 0.3);
@@ -254,24 +250,19 @@ h1 {
   stroke-width: 2;
 }
 
-/* Responsive design */
 @media (max-width: 768px) {
   .container {
     padding: 40px 24px;
   }
-  
   h1 {
     font-size: 2.2em;
   }
-  
   .subtitle {
     font-size: 1em;
   }
-  
   .parser-grid {
     grid-template-columns: 1fr;
   }
-  
   .features {
     flex-direction: column;
     align-items: center;
@@ -279,7 +270,6 @@ h1 {
   }
 }
 
-/* Accessibility improvements */
 .parser-card:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
@@ -287,12 +277,6 @@ h1 {
 
 .parser-card:focus:not(:focus-visible) {
   outline: none;
-}
-
-/* Loading animation */
-@keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
 }
 </style>
 </head>
@@ -409,7 +393,19 @@ h1 {
       <div class="card-description">Decode Issuer Application Data for EMV transactions</div>
       <span class="card-tag">EMV IAD</span>
     </a>
-    
+
+    <!-- Device Metrics -->
+    <a href="device-info.html" class="parser-card" target="_blank">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="card-title">Device Metrics</div>
+      <div class="card-description">View real-time hardware and system diagnostics for the current device</div>
+      <span class="card-tag">Diagnostics</span>
+    </a>
+
   </div>
 
   <div class="info-section">

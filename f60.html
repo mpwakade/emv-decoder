@@ -8,16 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+* { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
   --bg-primary: #0d1117;
   --bg-secondary: #161b22;
   --bg-card: #1c2128;
+  --bg-record: #12181f;
   --border-color: #30363d;
   --accent-primary: #58a6ff;
   --accent-secondary: #79c0ff;
@@ -27,525 +23,262 @@
   --error: #f85149;
   --warning: #d29922;
   --success: #3fb950;
-  --shadow-glow: rgba(88, 166, 255, 0.15);
+  --purple: #bc8cff;
+  --orange: #ffa657;
+  --shadow-glow: rgba(88,166,255,0.15);
 }
-
 body {
-  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  font-family: 'IBM Plex Mono','Courier New',monospace;
   background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
-  position: relative;
   overflow-x: hidden;
 }
-
-/* Subtle diagonal lines background */
 body::before {
   content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 100px,
-      rgba(88, 166, 255, 0.02) 100px,
-      rgba(88, 166, 255, 0.02) 102px
-    );
-  pointer-events: none;
-  z-index: 0;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: repeating-linear-gradient(45deg,transparent,transparent 100px,rgba(88,166,255,0.02) 100px,rgba(88,166,255,0.02) 102px);
+  pointer-events: none; z-index: 0;
 }
-
-/* Accent glow */
 body::after {
   content: '';
   position: fixed;
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, rgba(88, 166, 255, 0.06) 0%, transparent 70%);
-  top: -400px;
-  left: 50%;
-  transform: translateX(-50%);
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(88,166,255,0.06) 0%, transparent 70%);
+  top: -400px; left: 50%; transform: translateX(-50%);
   pointer-events: none;
-  animation: pulse-glow 8s ease-in-out infinite;
-  z-index: 0;
+  animation: pulse-glow 8s ease-in-out infinite; z-index: 0;
 }
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  position: relative;
-  z-index: 1;
-}
-
-/* Header */
-.header {
-  text-align: center;
-  margin-bottom: 50px;
-  animation: slideDown 0.6s ease-out;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+@keyframes pulse-glow { 0%,100%{opacity:.4} 50%{opacity:.8} }
+.container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
+.header { text-align: center; margin-bottom: 50px; animation: slideDown .6s ease-out; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
 .header-badge {
-  display: inline-block;
-  padding: 6px 16px;
-  background: rgba(88, 166, 255, 0.1);
-  border: 1px solid rgba(88, 166, 255, 0.3);
-  border-radius: 20px;
-  color: var(--accent-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 16px;
+  display: inline-block; padding: 6px 16px;
+  background: rgba(88,166,255,.1); border: 1px solid rgba(88,166,255,.3);
+  border-radius: 20px; color: var(--accent-primary);
+  font-size: .75rem; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; margin-bottom: 16px;
   animation: glow-pulse 3s ease-in-out infinite;
 }
-
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(88, 166, 255, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }
-}
-
+@keyframes glow-pulse { 0%,100%{box-shadow:0 0 10px rgba(88,166,255,.2)} 50%{box-shadow:0 0 20px rgba(88,166,255,.4)} }
 h1 {
-  font-size: 3.5rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.02em;
+  font-size: 3.5rem; font-weight: 700; margin-bottom: 12px;
+  background: linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; letter-spacing: -.02em;
 }
-
-.subtitle {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
-  font-weight: 400;
-}
-
-/* Input Section */
+.subtitle { color: var(--text-secondary); font-size: 1.1rem; }
 .input-section {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: fadeIn 0.6s ease-out 0.2s backwards;
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 16px; padding: 32px; margin-bottom: 32px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+  animation: fadeIn .6s ease-out .2s backwards;
 }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+@keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 .input-label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  display: block; font-size: .85rem; font-weight: 600;
+  color: var(--text-secondary); margin-bottom: 12px;
+  text-transform: uppercase; letter-spacing: .05em;
 }
-
-.input-wrapper {
-  position: relative;
-  margin-bottom: 20px;
-}
-
+.input-wrapper { position: relative; margin-bottom: 20px; }
 #hexInput {
-  width: 100%;
-  padding: 16px 20px;
-  background: var(--bg-card);
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  color: var(--text-primary);
-  font-family: 'Fira Code', monospace;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  outline: none;
+  width: 100%; padding: 16px 20px;
+  background: var(--bg-card); border: 2px solid var(--border-color);
+  border-radius: 12px; color: var(--text-primary);
+  font-family: 'Fira Code',monospace; font-size: .95rem;
+  transition: all .3s; outline: none;
 }
-
-#hexInput:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
-}
-
-#hexInput::placeholder {
-  color: var(--text-muted);
-}
-
+#hexInput:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(88,166,255,.1); }
+#hexInput::placeholder { color: var(--text-muted); }
 .char-count {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  background: var(--bg-card);
-  padding: 4px 8px;
-  border-radius: 4px;
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  font-size: .75rem; color: var(--text-muted);
+  background: var(--bg-card); padding: 4px 8px; border-radius: 4px;
 }
-
-.button-group {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
+.button-group { display: flex; gap: 12px; flex-wrap: wrap; }
 .btn {
-  padding: 14px 28px;
-  border: none;
-  border-radius: 10px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding: 14px 28px; border: none; border-radius: 10px;
+  font-family: 'IBM Plex Mono',monospace; font-size: .9rem;
+  font-weight: 600; cursor: pointer; transition: all .3s;
+  position: relative; overflow: hidden;
+  text-transform: uppercase; letter-spacing: .05em;
 }
-
 .btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 0; height: 0; border-radius: 50%;
+  background: rgba(255,255,255,.2); transform: translate(-50%,-50%);
+  transition: width .6s, height .6s;
 }
-
-.btn:hover::before {
-  width: 300px;
-  height: 300px;
-}
-
+.btn:hover::before { width: 300px; height: 300px; }
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  color: #0d1117;
-  box-shadow: 0 4px 15px var(--shadow-glow);
+  background: linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));
+  color: #0d1117; box-shadow: 0 4px 15px var(--shadow-glow);
 }
-
-.btn-primary:hover {
-  box-shadow: 0 6px 25px rgba(88, 166, 255, 0.3);
-  transform: translateY(-2px);
-}
-
+.btn-primary:hover { box-shadow: 0 6px 25px rgba(88,166,255,.3); transform: translateY(-2px); }
 .btn-secondary {
-  background: var(--bg-card);
-  color: var(--text-primary);
+  background: var(--bg-card); color: var(--text-primary);
   border: 2px solid var(--border-color);
 }
-
-.btn-secondary:hover {
-  border-color: var(--accent-primary);
-  background: rgba(88, 166, 255, 0.05);
-}
-
+.btn-secondary:hover { border-color: var(--accent-primary); background: rgba(88,166,255,.05); }
 .btn-success {
-  background: rgba(63, 185, 80, 0.15);
-  color: var(--success);
-  border: 2px solid rgba(63, 185, 80, 0.3);
+  background: rgba(63,185,80,.15); color: var(--success);
+  border: 2px solid rgba(63,185,80,.3);
 }
-
-.btn-success:hover {
-  background: rgba(63, 185, 80, 0.25);
-  border-color: var(--success);
-}
-
-/* Results Section */
-#output {
-  display: grid;
-  gap: 20px;
-}
-
+.btn-success:hover { background: rgba(63,185,80,.25); border-color: var(--success); }
+#output { display: grid; gap: 20px; }
 .blocks-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding: 20px 24px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  animation: fadeIn 0.5s ease-out;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px; padding: 20px 24px;
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 12px; animation: fadeIn .5s ease-out;
 }
-
-.blocks-count {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--accent-primary);
-}
-
-.blocks-count .number {
-  font-size: 2rem;
-  margin-left: 8px;
-}
-
+.blocks-count { font-size: 1.2rem; font-weight: 700; color: var(--accent-primary); }
+.blocks-count .number { font-size: 2rem; margin-left: 8px; }
 .block-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: fadeIn 0.6s ease-out backwards;
-  transition: all 0.3s ease;
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 16px; padding: 28px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+  animation: fadeIn .6s ease-out backwards; transition: all .3s;
 }
-
 .block-card:hover {
-  border-color: rgba(88, 166, 255, 0.3);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(88,166,255,.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,.4);
   transform: translateY(-2px);
 }
-
-.block-card:nth-child(1) { animation-delay: 0.1s; }
-.block-card:nth-child(2) { animation-delay: 0.15s; }
-.block-card:nth-child(3) { animation-delay: 0.2s; }
-.block-card:nth-child(4) { animation-delay: 0.25s; }
-.block-card:nth-child(5) { animation-delay: 0.3s; }
-
+.block-card:nth-child(1){animation-delay:.1s}
+.block-card:nth-child(2){animation-delay:.15s}
+.block-card:nth-child(3){animation-delay:.2s}
+.block-card:nth-child(4){animation-delay:.25s}
+.block-card:nth-child(5){animation-delay:.3s}
+.block-card:nth-child(6){animation-delay:.35s}
+.block-card:nth-child(7){animation-delay:.4s}
 .block-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; padding-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
 }
-
-.block-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
+.block-title { display: flex; align-items: center; gap: 12px; }
 .block-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(121, 192, 255, 0.2));
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg,rgba(88,166,255,.2),rgba(121,192,255,.2));
+  border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; font-size: 1.2rem;
 }
-
-.block-number {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
+.block-number { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
+.block-name { font-size: .85rem; color: var(--text-secondary); margin-top: 2px; }
 .block-badge {
   padding: 6px 14px;
-  background: rgba(88, 166, 255, 0.15);
-  border: 1px solid rgba(88, 166, 255, 0.3);
-  border-radius: 20px;
-  font-size: 0.75rem;
-  color: var(--accent-primary);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  background: rgba(88,166,255,.15); border: 1px solid rgba(88,166,255,.3);
+  border-radius: 20px; font-size: .75rem; color: var(--accent-primary);
+  font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
 }
-
-.data-grid {
-  display: grid;
-  gap: 12px;
+/* Section within block (for raw header and parsed body) */
+.section-title {
+  font-size: .75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-muted);
+  margin: 20px 0 10px; padding-left: 4px;
+  display: flex; align-items: center; gap: 8px;
 }
-
+.section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-color);
+}
+.data-grid { display: grid; gap: 8px; }
 .data-row {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 16px;
-  padding: 14px 16px;
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 10px;
-  align-items: start;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+  display: grid; grid-template-columns: 220px 1fr;
+  gap: 16px; padding: 12px 14px;
+  background: rgba(0,0,0,.15); border-radius: 8px;
+  align-items: start; font-size: .88rem; transition: all .2s;
 }
-
-.data-row:hover {
-  background: rgba(88, 166, 255, 0.05);
-  transform: translateX(4px);
-}
-
+.data-row:hover { background: rgba(88,166,255,.05); transform: translateX(3px); }
 .data-label {
-  color: var(--text-secondary);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--text-secondary); font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
 }
-
-.data-label-icon {
-  font-size: 0.85rem;
-  opacity: 0.6;
-}
-
-.data-value {
-  color: var(--text-primary);
-  font-family: 'Fira Code', monospace;
-  word-break: break-all;
-}
-
-.hex-value {
-  color: var(--accent-primary);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-}
-
+.data-label-icon { font-size: .85rem; opacity: .6; }
+.data-value { color: var(--text-primary); font-family: 'Fira Code',monospace; word-break: break-all; }
+.hex-value { color: var(--accent-primary); font-weight: 600; letter-spacing: .03em; }
 .ascii-value {
-  color: var(--success);
-  font-family: 'Fira Code', monospace;
-  font-size: 0.9rem;
-  background: rgba(63, 185, 80, 0.1);
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(63, 185, 80, 0.2);
-  white-space: pre-wrap;
-  word-break: break-all;
-  margin-top: 8px;
-  display: block;
+  color: var(--success); font-family: 'Fira Code',monospace; font-size: .88rem;
+  background: rgba(63,185,80,.08); padding: 6px 10px;
+  border-radius: 6px; border: 1px solid rgba(63,185,80,.2);
+  display: inline-block;
 }
-
-/* Error State */
+.parsed-section {
+  margin-top: 20px; border: 1px solid rgba(88,166,255,.15);
+  border-radius: 12px; overflow: hidden;
+}
+.parsed-header {
+  background: rgba(88,166,255,.08); padding: 12px 18px;
+  font-size: .8rem; font-weight: 700; color: var(--accent-primary);
+  text-transform: uppercase; letter-spacing: .08em;
+  border-bottom: 1px solid rgba(88,166,255,.15);
+  display: flex; align-items: center; gap: 8px;
+}
+.parsed-body { padding: 16px; display: grid; gap: 8px; }
+/* Record card for repeating entries (BIN, EMV, CA keys, IDS) */
+.record-card {
+  background: var(--bg-record); border: 1px solid rgba(88,166,255,.12);
+  border-radius: 10px; overflow: hidden; margin-top: 12px;
+}
+.record-header {
+  background: rgba(88,166,255,.06); padding: 10px 16px;
+  font-size: .78rem; font-weight: 700; color: var(--accent-secondary);
+  text-transform: uppercase; letter-spacing: .06em;
+  border-bottom: 1px solid rgba(88,166,255,.1);
+}
+.record-body { padding: 14px; display: grid; gap: 7px; }
+.field-row {
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 12px; padding: 8px 10px;
+  background: rgba(255,255,255,.02); border-radius: 6px;
+  font-size: .83rem; align-items: start;
+}
+.field-label { color: var(--text-secondary); font-weight: 600; }
+.field-value { color: var(--text-primary); font-family: 'Fira Code',monospace; word-break: break-all; }
+.field-value .hex { color: var(--accent-primary); }
+.field-value .asc { color: var(--success); font-style: normal; }
+.field-value .num { color: var(--orange); }
+.field-value .tag { color: var(--purple); }
+.badge-small {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: .7rem; font-weight: 700; margin-left: 6px;
+}
+.badge-hex { background: rgba(88,166,255,.12); color: var(--accent-primary); }
+.badge-dec { background: rgba(255,166,87,.12); color: var(--orange); }
+.badge-asc { background: rgba(63,185,80,.12); color: var(--success); }
+.unknown-table {
+  background: rgba(210,153,34,.05); border: 1px solid rgba(210,153,34,.2);
+  border-radius: 10px; padding: 16px 18px; margin-top: 16px;
+  color: var(--warning); font-size: .85rem;
+}
 .error-card {
-  background: rgba(248, 81, 73, 0.1);
-  border: 1px solid rgba(248, 81, 73, 0.3);
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  animation: shake 0.5s ease;
+  background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.3);
+  border-radius: 16px; padding: 24px;
+  display: flex; align-items: center; gap: 16px;
+  animation: shake .5s ease;
 }
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-10px); }
-  75% { transform: translateX(10px); }
-}
-
-.error-icon {
-  font-size: 2rem;
-}
-
-.error-message {
-  color: var(--error);
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.error-detail {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  margin-top: 4px;
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 80px 20px;
-  color: var(--text-muted);
-}
-
-.empty-state-icon {
-  font-size: 4rem;
-  margin-bottom: 16px;
-  opacity: 0.3;
-}
-
-.empty-state-text {
-  font-size: 1.1rem;
-}
-
-/* Copy Button */
-.copy-section {
-  margin-top: 32px;
-  text-align: center;
-  animation: fadeIn 0.6s ease-out 0.4s backwards;
-}
-
-/* Responsive */
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
+.error-icon { font-size: 2rem; }
+.error-message { color: var(--error); font-weight: 600; font-size: 1rem; }
+.error-detail { color: var(--text-muted); font-size: .85rem; margin-top: 4px; }
+.empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+.empty-state-icon { font-size: 4rem; margin-bottom: 16px; opacity: .3; }
+.empty-state-text { font-size: 1.1rem; }
+.copy-section { margin-top: 32px; text-align: center; animation: fadeIn .6s ease-out .4s backwards; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
 @media (max-width: 768px) {
-  h1 {
-    font-size: 2.5rem;
-  }
-  
-  .subtitle {
-    font-size: 1rem;
-  }
-  
-  .input-section {
-    padding: 24px;
-  }
-  
-  .data-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .button-group {
-    flex-direction: column;
-  }
-  
-  .btn {
-    width: 100%;
-  }
-  
-  .blocks-header {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
-  
-  .block-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-primary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
+  h1 { font-size: 2.2rem; }
+  .data-row { grid-template-columns: 1fr; gap: 4px; }
+  .field-row { grid-template-columns: 1fr; gap: 4px; }
+  .button-group { flex-direction: column; }
+  .btn { width: 100%; }
+  .blocks-header { flex-direction: column; gap: 12px; text-align: center; }
+  .block-header { flex-direction: column; gap: 12px; align-items: flex-start; }
 }
 </style>
 </head>
@@ -556,29 +289,23 @@ h1 {
     <h1>Field 60 Parser</h1>
     <p class="subtitle">Decimal Length Parser with Structured Block Analysis</p>
   </div>
-
   <div class="input-section">
     <label class="input-label" for="hexInput">Hexadecimal Input</label>
     <div class="input-wrapper">
-      <input 
-        type="text" 
-        id="hexInput" 
+      <input type="text" id="hexInput"
         placeholder="Paste your Field 60 hex string here..."
-        autocomplete="off"
-        spellcheck="false"
-      >
+        autocomplete="off" spellcheck="false">
       <span class="char-count" id="charCount">0 chars</span>
     </div>
     <div class="button-group">
       <button class="btn btn-primary" onclick="parseField60()">
-        <span style="position: relative; z-index: 1;">⚡ Parse Field 60</span>
+        <span style="position:relative;z-index:1">⚡ Parse Field 60</span>
       </button>
       <button class="btn btn-secondary" onclick="clearData()">
-        <span style="position: relative; z-index: 1;">🗑️ Clear</span>
+        <span style="position:relative;z-index:1">🗑️ Clear</span>
       </button>
     </div>
   </div>
-
   <div id="output">
     <div class="empty-state">
       <div class="empty-state-icon">📦</div>
@@ -588,239 +315,452 @@ h1 {
 </div>
 
 <script>
-// Character counter
-const hexInput = document.getElementById('hexInput');
-const charCount = document.getElementById('charCount');
+// ── Utilities ──────────────────────────────────────────────────────────────────
 
+const hexInput  = document.getElementById('hexInput');
+const charCount = document.getElementById('charCount');
 hexInput.addEventListener('input', function() {
-  const length = this.value.trim().length;
-  charCount.textContent = `${length} chars`;
+  charCount.textContent = `${this.value.trim().length} chars`;
 });
 
-function hexToAscii(hex) {
-  let output = "";
-  for (let i = 0; i < hex.length; i += 2) {
-    const byte = parseInt(hex.substr(i, 2), 16);
-    output += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
-  }
-  return output;
+/** Extract `len` bytes starting at byte offset `off` from hex string */
+function getEl(hex, off, len) {
+  return hex.substr(off * 2, len * 2);
 }
+
+/** Hex → printable ASCII (non-printable → '.') */
+function hexToAscii(hex) {
+  let out = '';
+  for (let i = 0; i < hex.length; i += 2) {
+    const b = parseInt(hex.substr(i, 2), 16);
+    out += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+  }
+  return out;
+}
+
+/** Trim ASCII string (remove trailing dots = padding) */
+function trimAscii(ascii) { return ascii.replace(/\.+$/, '').trim(); }
+
+function h(v)   { return `<span class="hex">${v}</span>`; }
+function a(v)   { return `<span class="asc">"${v}"</span>`; }
+function n(v)   { return `<span class="num">${v}</span>`; }
+function tag(v) { return `<span class="tag">${v}</span>`; }
+
+function fieldRow(label, value) {
+  return `<div class="field-row"><div class="field-label">${label}</div><div class="field-value">${value}</div></div>`;
+}
+
+// ── Table ID metadata ──────────────────────────────────────────────────────────
+
+const TABLE_META = {
+  '01': { name: 'Merchant Info',               icon: '🏪' },
+  '02': { name: 'BIN Range',                   icon: '💳' },
+  '03': { name: 'Communication Parameters',    icon: '📡' },
+  '05': { name: 'EMV Parameters',              icon: '🔐' },
+  '06': { name: 'EMV CA Public Keys',          icon: '🔑' },
+  '11': { name: 'Transaction Configuration',   icon: '⚙️'  },
+  '16': { name: 'IDS Config',                  icon: '🆔' },
+};
+
+// ── Per-table parsers ─────────────────────────────────────────────────────────
+
+function parseTable01(data) {
+  const tableId    = getEl(data,   0,  1);
+  const mID        = getEl(data,   3, 15);
+  const mCC        = getEl(data,  18,  4);
+  const mName      = getEl(data,  22, 40);
+  const addr1      = getEl(data,  62, 40);
+  const addr2      = getEl(data, 102, 40);
+  const addr3      = getEl(data, 142, 40);
+  const phone      = getEl(data, 182,  8);
+
+  return `
+    <div class="parsed-section">
+      <div class="parsed-header">🏪 Merchant Info Table</div>
+      <div class="parsed-body">
+        ${fieldRow('Table ID',                 h(tableId))}
+        ${fieldRow('Merchant ID',              `${h(mID)} ${a(trimAscii(hexToAscii(mID)))}`)}
+        ${fieldRow('MCC',                      `${h(mCC)} ${a(trimAscii(hexToAscii(mCC)))}`)}
+        ${fieldRow('Merchant Name',            `${h(mName)} ${a(trimAscii(hexToAscii(mName)))}`)}
+        ${fieldRow('Address 1',                `${h(addr1)} ${a(trimAscii(hexToAscii(addr1)))}`)}
+        ${fieldRow('Address 2',                `${h(addr2)} ${a(trimAscii(hexToAscii(addr2)))}`)}
+        ${fieldRow('Address 3',                `${h(addr3)} ${a(trimAscii(hexToAscii(addr3)))}`)}
+        ${fieldRow('Support Phone',            h(phone))}
+      </div>
+    </div>`;
+}
+
+function parseTable02(data) {
+  const tableId = getEl(data, 0, 1);
+  const totalBINs = getEl(data, 3, 2);
+  const count = parseInt(totalBINs, 10);
+
+  let records = '';
+  let idx = 5;
+  for (let x = 0; x < count && idx * 2 < data.length; x++) {
+    const rangeID   = getEl(data, idx, 1); idx += 1;
+    const rangeLow  = getEl(data, idx, 5); idx += 5;
+    const rangeHigh = getEl(data, idx, 5); idx += 5;
+    const rangeName = getEl(data, idx,20); idx += 20;
+    const issuerIdx = getEl(data, idx, 1); idx += 1;
+    const panLen    = getEl(data, idx, 1); idx += 1;
+    const rfu       = getEl(data, idx, 1); idx += 1;
+
+    records += `
+      <div class="record-card">
+        <div class="record-header">BIN Entry #${x + 1}</div>
+        <div class="record-body">
+          ${fieldRow('PAN Range ID',   h(rangeID))}
+          ${fieldRow('PAN Range Low',  h(rangeLow))}
+          ${fieldRow('PAN Range High', h(rangeHigh))}
+          ${fieldRow('Range Name',     `${h(rangeName)} ${a(trimAscii(hexToAscii(rangeName)))}`)}
+          ${fieldRow('Issuer Index',   h(issuerIdx))}
+          ${fieldRow('PAN Length',     n(parseInt(panLen,16)))}
+          ${fieldRow('RFU',            h(rfu))}
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="parsed-section">
+      <div class="parsed-header">💳 BIN Range Table &nbsp;·&nbsp; ${n(count)} entries</div>
+      <div class="parsed-body">
+        ${fieldRow('Table ID',           h(tableId))}
+        ${fieldRow('Total BIN Count',    n(parseInt(totalBINs,10)))}
+        ${records}
+      </div>
+    </div>`;
+}
+
+function parseTable03(data) {
+  const tableId     = getEl(data,  0, 1);
+  const nii         = getEl(data,  3, 2);
+  const connTO      = getEl(data,  5, 1);
+  const respTO      = getEl(data,  6, 1);
+  const primComm    = getEl(data,  7, 1);
+  const secComm     = getEl(data,  8, 1);
+  const paramLen    = getEl(data,  9, 2);
+  const paramData   = data.substring(11 * 2);
+
+  return `
+    <div class="parsed-section">
+      <div class="parsed-header">📡 Communication Parameters Table</div>
+      <div class="parsed-body">
+        ${fieldRow('Table ID',                    h(tableId))}
+        ${fieldRow('NII',                         h(nii))}
+        ${fieldRow('Connect Timeout',             `${n(parseInt(connTO,16))}s`)}
+        ${fieldRow('Response Timeout',            `${n(parseInt(respTO,16))}s`)}
+        ${fieldRow('Primary Comm Type',           h(primComm))}
+        ${fieldRow('Secondary Comm Type',         h(secComm))}
+        ${fieldRow('Comm Param Length',           `${h(paramLen)} ${n('('+parseInt(paramLen,16)+' bytes)')}`)}
+        ${fieldRow('Comm Parameters (raw)',        h(paramData))}
+      </div>
+    </div>`;
+}
+
+function parseTable05(data) {
+  const tableId  = getEl(data, 0, 1);
+  const recCount = getEl(data, 3, 1);
+  const count    = parseInt(recCount, 10);
+
+  let records = '';
+  let idx = 4;
+  for (let x = 0; x < count && idx * 2 < data.length; x++) {
+    const aidLen        = getEl(data, idx, 2); idx += 2;
+    const aidLenInt     = parseInt(aidLen, 16);
+    const aid           = getEl(data, idx, aidLenInt); idx += aidLenInt;
+    const aidName       = getEl(data, idx, 20); idx += 20;
+    const appVer        = getEl(data, idx,  2); idx += 2;
+    const ddolLen       = getEl(data, idx,  1); idx += 1;
+    const ddolLenInt    = parseInt(ddolLen, 16);
+    const ddol          = getEl(data, idx, ddolLenInt); idx += ddolLenInt;
+    const tdolLen       = getEl(data, idx,  1); idx += 1;
+    const tdolLenInt    = parseInt(tdolLen, 16);
+    const tdol          = getEl(data, idx, tdolLenInt); idx += tdolLenInt;
+    const tacDef        = getEl(data, idx,  5); idx += 5;
+    const tacDen        = getEl(data, idx,  5); idx += 5;
+    const tacOnl        = getEl(data, idx,  5); idx += 5;
+    const threshold     = getEl(data, idx,  4); idx += 4;
+    const maxTarget     = getEl(data, idx,  1); idx += 1;
+    const target        = getEl(data, idx,  1); idx += 1;
+    const floorLim      = getEl(data, idx,  6); idx += 6;
+    const clTacDef      = getEl(data, idx,  5); idx += 5;
+    const clTacDen      = getEl(data, idx,  5); idx += 5;
+    const clTacOnl      = getEl(data, idx,  5); idx += 5;
+    const clMaxLim      = getEl(data, idx,  6); idx += 6;
+    const clOffLim      = getEl(data, idx,  6); idx += 6;
+    const clCvmLim      = getEl(data, idx,  6); idx += 6;
+
+    records += `
+      <div class="record-card">
+        <div class="record-header">EMV AID Record #${x + 1} &nbsp;·&nbsp; AID: ${aid}</div>
+        <div class="record-body">
+          ${fieldRow('AID Length',                  n(aidLenInt))}
+          ${fieldRow('AID',                         tag(aid))}
+          ${fieldRow('AID Name',                    `${h(aidName)} ${a(trimAscii(hexToAscii(aidName)))}`)}
+          ${fieldRow('App Version',                 h(appVer))}
+          ${fieldRow('Default DDOL Len',            n(ddolLenInt))}
+          ${fieldRow('Default DDOL',                tag(ddol))}
+          ${fieldRow('Default TDOL Len',            n(tdolLenInt))}
+          ${fieldRow('Default TDOL',                tag(tdol))}
+          ${fieldRow('TAC Default',                 h(tacDef))}
+          ${fieldRow('TAC Denial',                  h(tacDen))}
+          ${fieldRow('TAC Online',                  h(tacOnl))}
+          ${fieldRow('Threshold (Biased Rand)',      h(threshold))}
+          ${fieldRow('Max Target % (Biased)',        n(parseInt(maxTarget,16)))}
+          ${fieldRow('Target % (Random)',            n(parseInt(target,16)))}
+          ${fieldRow('Terminal Floor Limit',        h(floorLim))}
+          ${fieldRow('CL TAC Default',              h(clTacDef))}
+          ${fieldRow('CL TAC Denial',               h(clTacDen))}
+          ${fieldRow('CL TAC Online',               h(clTacOnl))}
+          ${fieldRow('CL Max Limit',                h(clMaxLim))}
+          ${fieldRow('CL Offline Limit',            h(clOffLim))}
+          ${fieldRow('CL CVM Limit',                h(clCvmLim))}
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="parsed-section">
+      <div class="parsed-header">🔐 EMV Parameters Table &nbsp;·&nbsp; ${n(count)} AID record(s)</div>
+      <div class="parsed-body">
+        ${fieldRow('Table ID',           h(tableId))}
+        ${fieldRow('Record Count',       n(count))}
+        ${records}
+      </div>
+    </div>`;
+}
+
+function parseTable06(data) {
+  const tableId = getEl(data, 0, 1);
+  const countRaw = getEl(data, 3, 1);
+  const count = parseInt(countRaw, 10);
+
+  let records = '';
+  let idx = 4;
+  for (let x = 0; x < count && idx * 2 < data.length; x++) {
+    const rid        = getEl(data, idx, 5); idx += 5;
+    const keyIdx     = getEl(data, idx, 1); idx += 1;
+    const expLenHex  = getEl(data, idx, 1); idx += 1;
+    const expLenInt  = parseInt(expLenHex, 16);
+    const exponent   = getEl(data, idx, expLenInt); idx += expLenInt;
+    const modLenHex  = getEl(data, idx, 1); idx += 1;
+    const modLenInt  = parseInt(modLenHex, 16);
+    const modulus    = getEl(data, idx, modLenInt); idx += modLenInt;
+    const hash       = getEl(data, idx, 20); idx += 20;
+
+    records += `
+      <div class="record-card">
+        <div class="record-header">CA Key #${x + 1} &nbsp;·&nbsp; RID: ${rid} &nbsp; Index: ${keyIdx}</div>
+        <div class="record-body">
+          ${fieldRow('Public Key RID',         tag(rid))}
+          ${fieldRow('Key Index',              h(keyIdx))}
+          ${fieldRow('Exponent Length',        `${h(expLenHex)} ${n('('+expLenInt+' bytes)')}`)}
+          ${fieldRow('Public Key Exponent',    h(exponent))}
+          ${fieldRow('Modulus Length',         `${h(modLenHex)} ${n('('+modLenInt+' bytes)')}`)}
+          ${fieldRow('Public Key Modulus',     `<span style="font-size:.78rem">${h(modulus)}</span>`)}
+          ${fieldRow('Hash (20 bytes)',         h(hash))}
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="parsed-section">
+      <div class="parsed-header">🔑 EMV CA Public Keys Table &nbsp;·&nbsp; ${n(count)} key(s)</div>
+      <div class="parsed-body">
+        ${fieldRow('Table ID',         h(tableId))}
+        ${fieldRow('Key Count',        n(count))}
+        ${records}
+      </div>
+    </div>`;
+}
+
+function parseTable11(data) {
+  const tableId     = getEl(data,  0, 1);
+  const advInterval = getEl(data,  3, 2);
+  const autoSettle  = getEl(data,  5, 1);
+  const settleTime  = getEl(data,  6, 2);
+  const settleFreq  = getEl(data,  8, 2);
+  const subTotal    = getEl(data, 10, 2);
+  const batchTime   = getEl(data, 12, 2);
+
+  return `
+    <div class="parsed-section">
+      <div class="parsed-header">⚙️ Transaction Configuration Table</div>
+      <div class="parsed-body">
+        ${fieldRow('Table ID',                         h(tableId))}
+        ${fieldRow('Advice Msg Upload Interval',       `${h(advInterval)} ${n('('+parseInt(advInterval,10)+')')}`)}
+        ${fieldRow('Auto Settlement Enabled',          `${h(autoSettle)} ${autoSettle === '01' ? '<span style="color:var(--success)">✓ Enabled</span>' : '<span style="color:var(--error)">✗ Disabled</span>'}`)}
+        ${fieldRow('Auto Settlement Time',             h(settleTime))}
+        ${fieldRow('Auto Settlement Frequency',        h(settleFreq))}
+        ${fieldRow('Settlement Subtotal Interval',     h(subTotal))}
+        ${fieldRow('Settlement Batch Time',            h(batchTime))}
+      </div>
+    </div>`;
+}
+
+function parseTable16(data) {
+  const tableId = getEl(data, 0, 1);
+  const countRaw = getEl(data, 3, 1);
+  const count = parseInt(countRaw, 10);
+
+  let records = '';
+  let idx = 3;
+  for (let x = 1; x < count; x++) {
+    const opId = getEl(data, idx, 8);
+    const ids  = getEl(data, idx, 8);
+    records += `
+      <div class="record-card">
+        <div class="record-header">IDS Entry #${x}</div>
+        <div class="record-body">
+          ${fieldRow('Operator ID', h(opId))}
+          ${fieldRow('IDS',         h(ids))}
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="parsed-section">
+      <div class="parsed-header">🆔 IDS Config Table &nbsp;·&nbsp; ${n(count)} entries</div>
+      <div class="parsed-body">
+        ${fieldRow('Table ID',   h(tableId))}
+        ${fieldRow('Count',      n(count))}
+        ${records}
+      </div>
+    </div>`;
+}
+
+function parseTableData(tableIdHex, dataHex) {
+  const id = tableIdHex.toUpperCase();
+  try {
+    switch (id) {
+      case '01': return parseTable01(dataHex);
+      case '02': return parseTable02(dataHex);
+      case '03': return parseTable03(dataHex);
+      case '05': return parseTable05(dataHex);
+      case '06': return parseTable06(dataHex);
+      case '11': return parseTable11(dataHex);
+      case '16': return parseTable16(dataHex);
+      default:
+        return `<div class="unknown-table">⚠️ No structured parser for Table ID <strong>${id}</strong> — raw hex displayed above.</div>`;
+    }
+  } catch (e) {
+    return `<div class="unknown-table">⚠️ Parse error for Table ID ${id}: ${e.message}</div>`;
+  }
+}
+
+// ── Main parser ───────────────────────────────────────────────────────────────
 
 function parseField60() {
   const hex = hexInput.value.trim().toUpperCase();
   const output = document.getElementById('output');
   output.innerHTML = '';
 
-  // Validation
   if (!hex) {
-    output.innerHTML = `
-      <div class="error-card">
-        <div class="error-icon">⚠️</div>
-        <div>
-          <div class="error-message">No data provided</div>
-          <div class="error-detail">Please paste a valid hexadecimal Field 60 string</div>
-        </div>
-      </div>
-    `;
-    return;
+    return showError('No data provided', 'Please paste a valid hexadecimal Field 60 string');
   }
-
   if (hex.length % 2 !== 0) {
-    output.innerHTML = `
-      <div class="error-card">
-        <div class="error-icon">⚠️</div>
-        <div>
-          <div class="error-message">Invalid hex length</div>
-          <div class="error-detail">Hex string must have an even number of characters</div>
-        </div>
-      </div>
-    `;
-    return;
+    return showError('Invalid hex length', 'Hex string must have an even number of characters');
   }
-
   if (!/^[0-9A-F]+$/.test(hex)) {
-    output.innerHTML = `
-      <div class="error-card">
-        <div class="error-icon">⚠️</div>
-        <div>
-          <div class="error-message">Invalid characters detected</div>
-          <div class="error-detail">Only hexadecimal characters (0-9, A-F) are allowed</div>
-        </div>
-      </div>
-    `;
-    return;
+    return showError('Invalid characters detected', 'Only hexadecimal characters (0-9, A-F) are allowed');
   }
 
-  // Parse blocks
   let blocks = [];
-  let i = 0;
-  let blockNumber = 1;
-  let hasError = false;
+  let i = 0, blockNum = 1;
 
-  while (i < hex.length && !hasError) {
+  while (i < hex.length) {
     if (i + 14 > hex.length) {
-      output.innerHTML = `
-        <div class="error-card">
-          <div class="error-icon">⚠️</div>
-          <div>
-            <div class="error-message">Incomplete block at position ${i}</div>
-            <div class="error-detail">Not enough data to complete block ${blockNumber}</div>
-          </div>
-        </div>
-      `;
-      hasError = true;
-      break;
+      return showError(`Incomplete block at position ${i}`, `Not enough data to complete block ${blockNum}`);
     }
-
-    const version = hex.substr(i, 4);
-    i += 4;
-    const dataBlock = hex.substr(i, 4);
-    i += 4;
-    const tableId = hex.substr(i, 2);
-    i += 2;
-    const lengthStr = hex.substr(i, 4);
-    const length = parseInt(lengthStr, 10);
-    i += 4;
-
+    const version   = hex.substr(i, 4); i += 4;
+    const dataBlock = hex.substr(i, 4); i += 4;
+    const tableId   = hex.substr(i, 2); i += 2;
+    const lengthStr = hex.substr(i, 4); i += 4;
+    const length    = parseInt(lengthStr, 10);
     if (isNaN(length)) {
-      output.innerHTML = `
-        <div class="error-card">
-          <div class="error-icon">⚠️</div>
-          <div>
-            <div class="error-message">Invalid length value at block ${blockNumber}</div>
-            <div class="error-detail">Length field contains invalid decimal digits</div>
-          </div>
-        </div>
-      `;
-      hasError = true;
-      break;
+      return showError(`Invalid length at block ${blockNum}`, 'Length field contains invalid decimal digits');
     }
-
-    const dataHexLength = length * 2;
-
-    if (i + dataHexLength > hex.length) {
-      output.innerHTML = `
-        <div class="error-card">
-          <div class="error-icon">⚠️</div>
-          <div>
-            <div class="error-message">Length overflow at block ${blockNumber}</div>
-            <div class="error-detail">Expected ${length} bytes (${dataHexLength} hex chars) but only ${hex.length - i} remaining</div>
-          </div>
-        </div>
-      `;
-      hasError = true;
-      break;
+    const dataHexLen = length * 2;
+    if (i + dataHexLen > hex.length) {
+      return showError(`Length overflow at block ${blockNum}`, `Expected ${length} bytes but only ${Math.floor((hex.length - i)/2)} remaining`);
     }
-
-    const dataHex = hex.substr(i, dataHexLength);
-    i += dataHexLength;
-    const ascii = hexToAscii(dataHex);
-
-    blocks.push({
-      number: blockNumber,
-      version,
-      dataBlock,
-      tableId,
-      length,
-      lengthStr,
-      dataHex,
-      ascii
-    });
-
-    blockNumber++;
+    const dataHex = hex.substr(i, dataHexLen); i += dataHexLen;
+    blocks.push({ number: blockNum, version, dataBlock, tableId, length, lengthStr, dataHex });
+    blockNum++;
   }
 
-  if (hasError) return;
-
-  // Display blocks header
-  output.innerHTML = `
-    <div class="blocks-header">
-      <div class="blocks-count">
-        <span>Total Blocks Found:</span>
-        <span class="number">${blocks.length}</span>
-      </div>
-    </div>
-  `;
-
-  // Display each block
-  blocks.forEach((block, index) => {
-    const blockHtml = `
+  const meta_html = blocks.map(b => {
+    const meta = TABLE_META[b.tableId.toUpperCase()] || { name: `Table 0x${b.tableId}`, icon: '📦' };
+    const parsedSection = parseTableData(b.tableId, b.dataHex);
+    return `
       <div class="block-card">
         <div class="block-header">
           <div class="block-title">
-            <div class="block-icon">📦</div>
-            <div class="block-number">Block ${block.number}</div>
+            <div class="block-icon">${meta.icon}</div>
+            <div>
+              <div class="block-number">Block ${b.number}</div>
+              <div class="block-name">${meta.name}</div>
+            </div>
           </div>
-          <div class="block-badge">${block.length} bytes</div>
+          <div class="block-badge">${b.length} bytes</div>
         </div>
-        
+
+        <div class="section-title">Block Header Fields</div>
         <div class="data-grid">
           <div class="data-row">
-            <div class="data-label">
-              <span class="data-label-icon">🔖</span>
-              <span>Version</span>
-            </div>
-            <div class="data-value"><span class="hex-value">${block.version}</span></div>
+            <div class="data-label"><span class="data-label-icon">🔖</span> Version</div>
+            <div class="data-value"><span class="hex-value">${b.version}</span></div>
           </div>
-          
           <div class="data-row">
-            <div class="data-label">
-              <span class="data-label-icon">📊</span>
-              <span>Data Block</span>
-            </div>
-            <div class="data-value"><span class="hex-value">${block.dataBlock}</span></div>
+            <div class="data-label"><span class="data-label-icon">📊</span> Data Block</div>
+            <div class="data-value"><span class="hex-value">${b.dataBlock}</span></div>
           </div>
-          
           <div class="data-row">
-            <div class="data-label">
-              <span class="data-label-icon">🏷️</span>
-              <span>Table ID</span>
+            <div class="data-label"><span class="data-label-icon">🏷️</span> Table ID</div>
+            <div class="data-value"><span class="hex-value">${b.tableId}</span>
+              <span class="badge-small badge-hex">0x${b.tableId}</span>
             </div>
-            <div class="data-value"><span class="hex-value">${block.tableId}</span></div>
           </div>
-          
           <div class="data-row">
-            <div class="data-label">
-              <span class="data-label-icon">📏</span>
-              <span>Length</span>
-            </div>
+            <div class="data-label"><span class="data-label-icon">📏</span> Length</div>
             <div class="data-value">
-              <span class="hex-value">${block.lengthStr}</span>
-              <span style="color: var(--text-muted); margin-left: 8px;">(${block.length} bytes)</span>
+              <span class="hex-value">${b.lengthStr}</span>
+              <span class="badge-small badge-dec">${b.length} bytes</span>
             </div>
           </div>
-          
           <div class="data-row">
-            <div class="data-label">
-              <span class="data-label-icon">💾</span>
-              <span>Data (HEX)</span>
-            </div>
-            <div class="data-value"><span class="hex-value">${block.dataHex}</span></div>
-          </div>
-          
-          <div class="data-row">
-            <div class="data-label">
-              <span class="data-label-icon">📝</span>
-              <span>Data (ASCII)</span>
-            </div>
-            <div class="data-value">
-              <span class="ascii-value">${block.ascii}</span>
-            </div>
+            <div class="data-label"><span class="data-label-icon">💾</span> Raw Data</div>
+            <div class="data-value"><span class="hex-value" style="font-size:.78rem">${b.dataHex}</span></div>
           </div>
         </div>
-      </div>
-    `;
-    output.innerHTML += blockHtml;
-  });
 
-  // Add copy button at the end
-  output.innerHTML += `
+        <div class="section-title">Parsed Fields</div>
+        ${parsedSection}
+      </div>`;
+  }).join('');
+
+  output.innerHTML = `
+    <div class="blocks-header">
+      <div class="blocks-count">Total Blocks Found:<span class="number">${blocks.length}</span></div>
+    </div>
+    ${meta_html}
     <div class="copy-section">
       <button class="btn btn-success" onclick="copyOutput()">
-        <span style="position: relative; z-index: 1;">📋 Copy All Data</span>
+        <span style="position:relative;z-index:1">📋 Copy All Data</span>
       </button>
-    </div>
-  `;
+    </div>`;
+}
+
+function showError(msg, detail) {
+  document.getElementById('output').innerHTML = `
+    <div class="error-card">
+      <div class="error-icon">⚠️</div>
+      <div>
+        <div class="error-message">${msg}</div>
+        <div class="error-detail">${detail}</div>
+      </div>
+    </div>`;
 }
 
 function clearData() {
@@ -830,42 +770,29 @@ function clearData() {
     <div class="empty-state">
       <div class="empty-state-icon">📦</div>
       <div class="empty-state-text">Enter Field 60 hex data above to begin parsing</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function copyOutput() {
   const output = document.getElementById('output');
-  let textToCopy = '';
-  
-  const blocks = output.querySelectorAll('.block-card');
-  blocks.forEach((block, index) => {
-    const blockNum = block.querySelector('.block-number').textContent;
-    const rows = block.querySelectorAll('.data-row');
-    
-    textToCopy += `${blockNum}\n`;
-    textToCopy += '═'.repeat(50) + '\n';
-    
-    rows.forEach(row => {
-      const label = row.querySelector('.data-label span:last-child').textContent;
-      const value = row.querySelector('.data-value').textContent.trim();
-      textToCopy += `${label}: ${value}\n`;
+  let text = '';
+  output.querySelectorAll('.block-card').forEach(card => {
+    text += card.querySelector('.block-number').textContent + ' — ';
+    text += (card.querySelector('.block-name') || {}).textContent || '';
+    text += '\n' + '═'.repeat(60) + '\n';
+    card.querySelectorAll('.field-row, .data-row').forEach(row => {
+      const label = row.querySelector('.field-label,.data-label')?.textContent?.trim() || '';
+      const value = row.querySelector('.field-value,.data-value')?.textContent?.trim() || '';
+      if (label) text += `  ${label}: ${value}\n`;
     });
-    
-    textToCopy += '\n';
+    text += '\n';
   });
-  
-  navigator.clipboard.writeText(textToCopy).then(() => {
+  navigator.clipboard.writeText(text).then(() => {
     const btn = event.target.closest('button');
-    const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<span style="position: relative; z-index: 1;">✓ Copied!</span>';
-    
-    setTimeout(() => {
-      btn.innerHTML = originalHTML;
-    }, 2000);
-  }).catch(() => {
-    alert('Failed to copy to clipboard');
-  });
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span style="position:relative;z-index:1">✓ Copied!</span>';
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  }).catch(() => alert('Failed to copy to clipboard'));
 }
 </script>
 </body>

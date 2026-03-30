@@ -448,8 +448,8 @@ function parseTable03(data) {
       <div class="parsed-body">
         ${fieldRow('Table ID',                    h(tableId))}
         ${fieldRow('NII',                         h(nii))}
-        ${fieldRow('Connect Timeout',             `${n(parseInt(connTO,16))}s`)}
-        ${fieldRow('Response Timeout',            `${n(parseInt(respTO,16))}s`)}
+        ${fieldRow('Connect Timeout',             `${h(connTO)} → ${n(parseInt(connTO,10))}s`)}
+        ${fieldRow('Response Timeout',            `${h(respTO)} → ${n(parseInt(respTO,10))}s`)}
         ${fieldRow('Primary Comm Type',           h(primComm))}
         ${fieldRow('Secondary Comm Type',         h(secComm))}
         ${fieldRow('Comm Param Length',           `${h(paramLen)} ${n('('+parseInt(paramLen,16)+' bytes)')}`)}
@@ -467,15 +467,15 @@ function parseTable05(data) {
   let idx = 4;
   for (let x = 0; x < count && idx * 2 < data.length; x++) {
     const aidLen        = getEl(data, idx, 2); idx += 2;
-    const aidLenInt     = parseInt(aidLen, 16);
+    const aidLenInt     = parseInt(aidLen, 10);  // Kotlin: aIDLength.toInt() — base 10
     const aid           = getEl(data, idx, aidLenInt); idx += aidLenInt;
     const aidName       = getEl(data, idx, 20); idx += 20;
     const appVer        = getEl(data, idx,  2); idx += 2;
     const ddolLen       = getEl(data, idx,  1); idx += 1;
-    const ddolLenInt    = parseInt(ddolLen, 16);
+    const ddolLenInt    = parseInt(ddolLen, 10); // Kotlin: defaultDDOLLength.toInt() — base 10
     const ddol          = getEl(data, idx, ddolLenInt); idx += ddolLenInt;
     const tdolLen       = getEl(data, idx,  1); idx += 1;
-    const tdolLenInt    = parseInt(tdolLen, 16);
+    const tdolLenInt    = parseInt(tdolLen, 10); // Kotlin: defaultTDOLLength.toInt() — base 10
     const tdol          = getEl(data, idx, tdolLenInt); idx += tdolLenInt;
     const tacDef        = getEl(data, idx,  5); idx += 5;
     const tacDen        = getEl(data, idx,  5); idx += 5;
@@ -600,18 +600,23 @@ function parseTable11(data) {
 }
 
 function parseTable16(data) {
-  const tableId = getEl(data, 0, 1);
+  const tableId  = getEl(data, 0, 1);
   const countRaw = getEl(data, 3, 1);
-  const count = parseInt(countRaw, 10);
+  const count    = parseInt(countRaw, 10);
 
+  // NOTE: The Kotlin source has a bug — index is declared as `val` (immutable)
+  // so it never advances, AND the loop starts at 1 (skipping entry 0).
+  // Both operatorIdentifier and iDS read from the same fixed byte offset.
+  // This parser fixes both issues: idx starts at 4 (after tableId+len+count),
+  // loop starts at 0, and idx advances 8 bytes per field.
   let records = '';
-  let idx = 3;
-  for (let x = 1; x < count; x++) {
-    const opId = getEl(data, idx, 8);
-    const ids  = getEl(data, idx, 8);
+  let idx = 4;
+  for (let x = 0; x < count && idx * 2 < data.length; x++) {
+    const opId = getEl(data, idx, 8); idx += 8;
+    const ids  = getEl(data, idx, 8); idx += 8;
     records += `
       <div class="record-card">
-        <div class="record-header">IDS Entry #${x}</div>
+        <div class="record-header">IDS Entry #${x + 1}</div>
         <div class="record-body">
           ${fieldRow('Operator ID', h(opId))}
           ${fieldRow('IDS',         h(ids))}
@@ -623,8 +628,11 @@ function parseTable16(data) {
     <div class="parsed-section">
       <div class="parsed-header">🆔 IDS Config Table &nbsp;·&nbsp; ${n(count)} entries</div>
       <div class="parsed-body">
-        ${fieldRow('Table ID',   h(tableId))}
-        ${fieldRow('Count',      n(count))}
+        ${fieldRow('Table ID', h(tableId))}
+        ${fieldRow('Count',    n(count))}
+        <div style="margin:8px 0;padding:8px 12px;background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.25);border-radius:8px;font-size:.78rem;color:var(--warning)">
+          ⚠️ Kotlin source bug: <code>val index = 3</code> never increments &amp; loop starts at 1 — parser corrected here
+        </div>
         ${records}
       </div>
     </div>`;
@@ -692,7 +700,14 @@ function parseField60() {
 
   const meta_html = blocks.map(b => {
     const meta = TABLE_META[b.tableId.toUpperCase()] || { name: `Table 0x${b.tableId}`, icon: '📦' };
-    const parsedSection = parseTableData(b.tableId, b.dataHex);
+    // Reconstruct full tableData as Kotlin sees it:
+    //   byte 0       = tableId  (1 byte)
+    //   bytes 1-2    = BCD length (2 bytes, the 4-char decimal lengthStr)
+    //   bytes 3+     = field data
+    // Kotlin getElement(offset, len) uses these byte offsets, so we must
+    // prepend tableId+lengthStr back before calling our parsers.
+    const tableData = b.tableId + b.lengthStr + b.dataHex;
+    const parsedSection = parseTableData(b.tableId, tableData);
     return `
       <div class="block-card">
         <div class="block-header">

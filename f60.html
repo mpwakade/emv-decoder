@@ -267,10 +267,231 @@ h1 {
 .empty-state-icon { font-size: 4rem; margin-bottom: 16px; opacity: .3; }
 .empty-state-text { font-size: 1.1rem; }
 .copy-section { margin-top: 32px; text-align: center; animation: fadeIn .6s ease-out .4s backwards; }
-::-webkit-scrollbar { width: 10px; height: 10px; }
+.btn-docs {
+  background: rgba(188,140,255,.12); color: var(--purple);
+  border: 2px solid rgba(188,140,255,.3);
+}
+.btn-docs:hover { background: rgba(188,140,255,.22); border-color: var(--purple); }
+
+/* ── Docs Overlay ─────────────────────────────────────────── */
+#docsOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg-primary);
+  display: none; flex-direction: column;
+  animation: docsIn .35s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+#docsOverlay.open { display: flex; }
+@keyframes docsIn { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
+
+.docs-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 32px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; z-index: 10;
+}
+.docs-topbar-title {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 1.1rem; font-weight: 700; color: var(--accent-primary);
+}
+.docs-topbar-title .badge {
+  background: rgba(88,166,255,.12); border: 1px solid rgba(88,166,255,.3);
+  border-radius: 6px; padding: 2px 10px; font-size: .72rem;
+  color: var(--accent-secondary); letter-spacing: .06em;
+}
+.docs-close {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  color: var(--text-primary); border-radius: 8px;
+  padding: 8px 18px; cursor: pointer; font-family: inherit;
+  font-size: .85rem; font-weight: 600; transition: all .2s;
+}
+.docs-close:hover { border-color: var(--error); color: var(--error); }
+
+.docs-body {
+  display: flex; flex: 1; overflow: hidden;
+}
+
+/* Sidebar TOC */
+.docs-toc {
+  width: 260px; flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto; padding: 24px 0;
+}
+.toc-section-label {
+  font-size: .65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text-muted);
+  padding: 0 20px; margin: 20px 0 8px;
+}
+.toc-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px; cursor: pointer;
+  font-size: .82rem; color: var(--text-secondary);
+  border-left: 3px solid transparent;
+  transition: all .2s; text-decoration: none;
+}
+.toc-link:hover { color: var(--text-primary); background: rgba(88,166,255,.05); border-left-color: rgba(88,166,255,.3); }
+.toc-link.active { color: var(--accent-primary); background: rgba(88,166,255,.08); border-left-color: var(--accent-primary); font-weight: 600; }
+.toc-icon { font-size: .95rem; opacity: .8; flex-shrink: 0; }
+.toc-id-badge {
+  margin-left: auto; font-size: .65rem; font-weight: 700;
+  background: rgba(88,166,255,.1); border: 1px solid rgba(88,166,255,.2);
+  color: var(--accent-primary); border-radius: 4px; padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+/* Main content */
+.docs-content {
+  flex: 1; overflow-y: auto; padding: 40px 48px;
+}
+
+.docs-section { margin-bottom: 64px; scroll-margin-top: 24px; }
+.docs-section-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 28px; padding-bottom: 16px;
+  border-bottom: 2px solid var(--border-color);
+}
+.docs-section-icon {
+  width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(88,166,255,.2), rgba(121,192,255,.1));
+  border: 1px solid rgba(88,166,255,.2);
+  display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+}
+.docs-section-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+.docs-section-sub { font-size: .85rem; color: var(--text-secondary); margin-top: 2px; }
+.docs-table-id-pill {
+  margin-left: auto; padding: 4px 14px; border-radius: 20px;
+  font-size: .8rem; font-weight: 700; letter-spacing: .04em;
+  background: rgba(88,166,255,.12); border: 1px solid rgba(88,166,255,.3);
+  color: var(--accent-primary);
+}
+
+/* Prose text */
+.docs-prose {
+  color: var(--text-secondary); font-size: .88rem;
+  line-height: 1.8; margin-bottom: 24px;
+}
+.docs-prose strong { color: var(--text-primary); }
+
+/* Byte-map table */
+.byte-table-wrap { overflow-x: auto; margin-bottom: 28px; border-radius: 12px; border: 1px solid var(--border-color); }
+.byte-table {
+  width: 100%; border-collapse: collapse; font-size: .82rem;
+  font-family: 'Fira Code', monospace;
+}
+.byte-table th {
+  background: var(--bg-card); color: var(--text-secondary);
+  padding: 11px 16px; text-align: left;
+  font-size: .7rem; text-transform: uppercase; letter-spacing: .07em;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+.byte-table td {
+  padding: 10px 16px; border-bottom: 1px solid rgba(48,54,61,.6);
+  vertical-align: top;
+}
+.byte-table tr:last-child td { border-bottom: none; }
+.byte-table tr:hover td { background: rgba(88,166,255,.04); }
+.bt-off  { color: var(--orange);   font-weight: 700; }
+.bt-len  { color: var(--purple);   font-weight: 600; }
+.bt-field{ color: var(--text-primary); font-weight: 600; }
+.bt-type { color: var(--accent-primary); }
+.bt-enc  { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: .7rem; font-weight: 700; }
+.enc-hex  { background: rgba(88,166,255,.12); color: var(--accent-primary); }
+.enc-bcd  { background: rgba(255,166,87,.12); color: var(--orange); }
+.enc-asc  { background: rgba(63,185,80,.12);  color: var(--success); }
+.enc-bin  { background: rgba(188,140,255,.12); color: var(--purple); }
+.bt-note  { color: var(--text-muted); font-size: .78rem; }
+.bt-repeat-row td { background: rgba(88,166,255,.03); }
+.bt-repeat-label {
+  grid-column: 1/-1; font-size: .7rem; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--accent-primary); font-weight: 700;
+  padding: 6px 16px; background: rgba(88,166,255,.06);
+  border-top: 1px solid rgba(88,166,255,.1);
+  border-bottom: 1px solid rgba(88,166,255,.1);
+}
+
+/* Flow diagram */
+.flow-diagram {
+  display: flex; align-items: flex-start; gap: 0;
+  overflow-x: auto; padding: 20px 0 8px; margin-bottom: 24px;
+  flex-wrap: nowrap;
+}
+.flow-box {
+  flex-shrink: 0; min-width: 90px; max-width: 120px;
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 10px 8px; text-align: center;
+  font-size: .72rem; transition: all .2s;
+}
+.flow-box:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+.flow-box .fb-bytes {
+  font-size: .65rem; color: var(--orange); font-weight: 700; margin-bottom: 4px;
+}
+.flow-box .fb-name { color: var(--text-primary); font-weight: 600; line-height: 1.3; }
+.flow-box .fb-enc  { font-size: .62rem; color: var(--text-muted); margin-top: 4px; }
+.flow-box.fb-header { border-color: rgba(88,166,255,.4); background: rgba(88,166,255,.06); }
+.flow-box.fb-repeat { border-color: rgba(188,140,255,.4); background: rgba(188,140,255,.06); }
+.flow-box.fb-var    { border-color: rgba(255,166,87,.4);  background: rgba(255,166,87,.06);  }
+.flow-arrow {
+  flex-shrink: 0; display: flex; align-items: center; padding: 0 4px;
+  color: var(--text-muted); font-size: .9rem; margin-top: 28px;
+}
+.flow-repeat-wrap {
+  border: 1px dashed rgba(188,140,255,.35); border-radius: 12px;
+  padding: 12px 10px 8px; position: relative; margin: 0 6px;
+  display: flex; align-items: flex-start; gap: 0;
+}
+.flow-repeat-label {
+  position: absolute; top: -10px; left: 10px;
+  background: var(--bg-primary); padding: 0 6px;
+  font-size: .65rem; color: var(--purple); font-weight: 700;
+  letter-spacing: .06em;
+}
+
+/* Block frame diagram */
+.frame-diagram {
+  display: flex; border: 1px solid var(--border-color);
+  border-radius: 12px; overflow: hidden; margin-bottom: 28px;
+  font-family: 'Fira Code', monospace; font-size: .78rem;
+}
+.frame-cell {
+  flex: 1; padding: 14px 10px; text-align: center; border-right: 1px solid var(--border-color);
+}
+.frame-cell:last-child { border-right: none; }
+.frame-cell .fc-bytes { font-size: .65rem; color: var(--orange); font-weight: 700; margin-bottom: 6px; }
+.frame-cell .fc-name  { color: var(--text-primary); font-weight: 700; font-size: .8rem; }
+.frame-cell .fc-note  { font-size: .65rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+.frame-cell.fc-version { background: rgba(88,166,255,.06); }
+.frame-cell.fc-datablk { background: rgba(63,185,80,.06); }
+.frame-cell.fc-tableid { background: rgba(255,166,87,.06); }
+.frame-cell.fc-length  { background: rgba(188,140,255,.06); }
+.frame-cell.fc-data    { background: rgba(88,166,255,.03); flex: 3; }
+
+/* Note boxes */
+.note-box {
+  border-radius: 10px; padding: 14px 18px;
+  margin-bottom: 18px; font-size: .82rem; display: flex; gap: 12px;
+}
+.note-box.info  { background: rgba(88,166,255,.07); border: 1px solid rgba(88,166,255,.2); color: var(--text-secondary); }
+.note-box.warn  { background: rgba(210,153,34,.07);  border: 1px solid rgba(210,153,34,.25); color: var(--warning); }
+.note-box.ok    { background: rgba(63,185,80,.07);   border: 1px solid rgba(63,185,80,.2);  color: var(--success); }
+.note-box .nb-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+
+/* Colour legend */
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--text-secondary); }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+@media (max-width: 900px) {
+  .docs-toc { display: none; }
+  .docs-content { padding: 24px 20px; }
+}
 @media (max-width: 768px) {
   h1 { font-size: 2.2rem; }
   .data-row { grid-template-columns: 1fr; gap: 4px; }
@@ -303,6 +524,9 @@ h1 {
       </button>
       <button class="btn btn-secondary" onclick="clearData()">
         <span style="position:relative;z-index:1">🗑️ Clear</span>
+      </button>
+      <button class="btn btn-docs" onclick="openDocs()">
+        <span style="position:relative;z-index:1">📖 Protocol Docs</span>
       </button>
     </div>
   </div>
@@ -809,6 +1033,634 @@ function copyOutput() {
     setTimeout(() => btn.innerHTML = orig, 2000);
   }).catch(() => alert('Failed to copy to clipboard'));
 }
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     PROTOCOL DOCS OVERLAY
+     ════════════════════════════════════════════════════════════ -->
+<div id="docsOverlay">
+  <div class="docs-topbar">
+    <div class="docs-topbar-title">
+      📖 Field 60 Protocol Reference
+      <span class="badge">ISO 8583</span>
+    </div>
+    <button class="docs-close" onclick="closeDocs()">✕ Close</button>
+  </div>
+  <div class="docs-body">
+
+    <!-- TOC sidebar -->
+    <nav class="docs-toc" id="docsToc">
+      <div class="toc-section-label">Overview</div>
+      <a class="toc-link active" onclick="scrollDoc('sec-overview')"><span class="toc-icon">🗺️</span>Block Frame Structure</a>
+      <a class="toc-link" onclick="scrollDoc('sec-flow')"><span class="toc-icon">🔄</span>Parse Flow</a>
+
+      <div class="toc-section-label">Tables</div>
+      <a class="toc-link" onclick="scrollDoc('sec-t01')"><span class="toc-icon">🏪</span>Merchant Info<span class="toc-id-badge">01</span></a>
+      <a class="toc-link" onclick="scrollDoc('sec-t02')"><span class="toc-icon">💳</span>BIN Range<span class="toc-id-badge">02</span></a>
+      <a class="toc-link" onclick="scrollDoc('sec-t03')"><span class="toc-icon">📡</span>Comm Params<span class="toc-id-badge">03</span></a>
+      <a class="toc-link" onclick="scrollDoc('sec-t05')"><span class="toc-icon">🔐</span>EMV Parameters<span class="toc-id-badge">05</span></a>
+      <a class="toc-link" onclick="scrollDoc('sec-t06')"><span class="toc-icon">🔑</span>CA Public Keys<span class="toc-id-badge">06</span></a>
+      <a class="toc-link" onclick="scrollDoc('sec-t11')"><span class="toc-icon">⚙️</span>Txn Config<span class="toc-id-badge">11</span></a>
+      <a class="toc-link" onclick="scrollDoc('sec-t16')"><span class="toc-icon">🆔</span>IDS Config<span class="toc-id-badge">16</span></a>
+
+      <div class="toc-section-label">Reference</div>
+      <a class="toc-link" onclick="scrollDoc('sec-encoding')"><span class="toc-icon">🔤</span>Encoding Key</a>
+      <a class="toc-link" onclick="scrollDoc('sec-notes')"><span class="toc-icon">⚠️</span>Known Issues</a>
+    </nav>
+
+    <!-- Main scrollable content -->
+    <div class="docs-content" id="docsContent">
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,166,87,.7)"></div>Offset (bytes)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(188,140,255,.7)"></div>Length (bytes)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(88,166,255,.7)"></div>HEX encoding</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(63,185,80,.7)"></div>ASCII encoding</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(210,153,34,.7)"></div>BCD/Decimal</div>
+      </div>
+
+      <!-- ── Overview ── -->
+      <div class="docs-section" id="sec-overview">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">🗺️</div>
+          <div>
+            <div class="docs-section-title">Block Frame Structure</div>
+            <div class="docs-section-sub">Every block in Field 60 starts with a fixed 7-byte header</div>
+          </div>
+        </div>
+
+        <div class="docs-prose">
+          Field 60 carries a variable number of <strong>parameter blocks</strong>. Each block begins with a 7-byte frame header followed by a variable-length data payload. Blocks are parsed sequentially until the hex string is exhausted.
+        </div>
+
+        <div class="frame-diagram">
+          <div class="frame-cell fc-version">
+            <div class="fc-bytes">2 bytes</div>
+            <div class="fc-name">VERSION</div>
+            <div class="fc-note">Protocol version (e.g. 0001)</div>
+          </div>
+          <div class="frame-cell fc-datablk">
+            <div class="fc-bytes">2 bytes</div>
+            <div class="fc-name">DATA BLOCK</div>
+            <div class="fc-note">Block sequence / type indicator</div>
+          </div>
+          <div class="frame-cell fc-tableid">
+            <div class="fc-bytes">1 byte</div>
+            <div class="fc-name">TABLE ID</div>
+            <div class="fc-note">Identifies table (01–16)</div>
+          </div>
+          <div class="frame-cell fc-length">
+            <div class="fc-bytes">2 bytes</div>
+            <div class="fc-name">LENGTH</div>
+            <div class="fc-note">Decimal ASCII digits — NOT hex</div>
+          </div>
+          <div class="frame-cell fc-data">
+            <div class="fc-bytes">LENGTH bytes</div>
+            <div class="fc-name">TABLE DATA</div>
+            <div class="fc-note">Payload. Offsets inside here start at 0 = tableId byte</div>
+          </div>
+        </div>
+
+        <div class="note-box info">
+          <span class="nb-icon">ℹ️</span>
+          <span>The <strong>Length field</strong> is 4 hex chars (2 bytes) but its value is read as a <strong>decimal integer</strong> (e.g. <code>0190</code> = 190 bytes, NOT 0x0190 = 400 bytes). This is why the parser uses <code>parseInt(lengthStr, 10)</code>.</span>
+        </div>
+        <div class="note-box info">
+          <span class="nb-icon">ℹ️</span>
+          <span>When table parsers use <code>getElement(offset, length)</code>, byte offset <strong>0 = the tableId byte itself</strong>, bytes 1–2 = the length field, and byte <strong>3 = first actual data field</strong>. This is why most field offsets start at 3.</span>
+        </div>
+
+        <div class="byte-table-wrap">
+          <table class="byte-table">
+            <thead><tr>
+              <th>Hex Chars</th><th>Bytes</th><th>Field</th><th>Encoding</th><th>Notes</th>
+            </tr></thead>
+            <tbody>
+              <tr><td class="bt-off">0–3</td><td class="bt-len">2</td><td class="bt-field">Version</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">e.g. <code>0001</code></td></tr>
+              <tr><td class="bt-off">4–7</td><td class="bt-len">2</td><td class="bt-field">Data Block</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Sequence indicator</td></tr>
+              <tr><td class="bt-off">8–9</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">01, 02, 03, 05, 06, 11, 16</td></tr>
+              <tr><td class="bt-off">10–13</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note">Count of bytes in TABLE DATA — parsed as base-10</td></tr>
+              <tr><td class="bt-off">14+</td><td class="bt-len">N</td><td class="bt-field">Table Data</td><td><span class="bt-enc enc-bin">MIXED</span></td><td class="bt-note">Table-specific payload; includes tableId at its own byte 0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Parse Flow ── -->
+      <div class="docs-section" id="sec-flow">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">🔄</div>
+          <div>
+            <div class="docs-section-title">End-to-End Parse Flow</div>
+            <div class="docs-section-sub">How Field 60 hex is decoded from wire to structured fields</div>
+          </div>
+        </div>
+
+        <div class="flow-diagram" style="flex-wrap:wrap;gap:6px">
+          <div class="flow-box fb-header"><div class="fb-bytes">Input</div><div class="fb-name">Raw Hex String</div><div class="fb-enc">Field 60 value</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">Validate</div><div class="fb-name">Even length &amp; hex chars only</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">+4 chars</div><div class="fb-name">Read Version</div><div class="fb-enc">2 bytes HEX</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">+4 chars</div><div class="fb-name">Read Data Block</div><div class="fb-enc">2 bytes HEX</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">+2 chars</div><div class="fb-name">Read Table ID</div><div class="fb-enc">1 byte HEX</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-var"><div class="fb-bytes">+4 chars</div><div class="fb-name">Read Length</div><div class="fb-enc">2 bytes DECIMAL</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-var"><div class="fb-bytes">+N×2 chars</div><div class="fb-name">Read Table Data</div><div class="fb-enc">Length bytes</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-repeat"><div class="fb-bytes">Switch</div><div class="fb-name">Dispatch to Table Parser</div><div class="fb-enc">ID 01/02/03/05/06/11/16</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-repeat"><div class="fb-bytes">Loop</div><div class="fb-name">Next block until end</div></div>
+        </div>
+      </div>
+
+      <!-- ══ TABLE 01 ══ -->
+      <div class="docs-section" id="sec-t01">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">🏪</div>
+          <div>
+            <div class="docs-section-title">Table 01 — Merchant Info</div>
+            <div class="docs-section-sub">Static merchant identification and address data</div>
+          </div>
+          <div class="docs-table-id-pill">Table ID 0x01</div>
+        </div>
+        <div class="docs-prose">
+          Carries the merchant's registration details as stored on the acquirer host. All text fields use <strong>ANS (ASCII Numeric Special)</strong> encoding and are <strong>fixed-width</strong>, right-padded with spaces (0x20). No repeat structure — exactly one record per block.
+        </div>
+
+        <div class="flow-diagram">
+          <div class="flow-box fb-header"><div class="fb-bytes">byte 0</div><div class="fb-name">Table ID</div><div class="fb-enc">= 0x01</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">bytes 1–2</div><div class="fb-name">Length</div><div class="fb-enc">decimal</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">bytes 3–17</div><div class="fb-name">Merchant ID</div><div class="fb-enc">15 B ANS</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">18–21</div><div class="fb-name">MCC</div><div class="fb-enc">4 B ANS</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">22–61</div><div class="fb-name">Merchant Name</div><div class="fb-enc">40 B ANS</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">62–101</div><div class="fb-name">Address 1</div><div class="fb-enc">40 B ANS</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">102–141</div><div class="fb-name">Address 2</div><div class="fb-enc">40 B ANS</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">142–181</div><div class="fb-name">Address 3</div><div class="fb-enc">40 B ANS</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">182–189</div><div class="fb-name">Phone</div><div class="fb-enc">8 B HEX</div></div>
+        </div>
+
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Byte Offset</th><th>Length</th><th>Field</th><th>Encoding</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="bt-off">0</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Always 0x01</td></tr>
+            <tr><td class="bt-off">1–2</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note">Total payload bytes</td></tr>
+            <tr><td class="bt-off">3–17</td><td class="bt-len">15</td><td class="bt-field">Merchant ID (mID)</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">Left-aligned, space-padded</td></tr>
+            <tr><td class="bt-off">18–21</td><td class="bt-len">4</td><td class="bt-field">Merchant Category Code</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">ISO 18245 MCC</td></tr>
+            <tr><td class="bt-off">22–61</td><td class="bt-len">40</td><td class="bt-field">Default Merchant Name</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">Space-padded</td></tr>
+            <tr><td class="bt-off">62–101</td><td class="bt-len">40</td><td class="bt-field">Merchant Address 1</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">Space-padded</td></tr>
+            <tr><td class="bt-off">102–141</td><td class="bt-len">40</td><td class="bt-field">Merchant Address 2</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">Space-padded</td></tr>
+            <tr><td class="bt-off">142–181</td><td class="bt-len">40</td><td class="bt-field">Merchant Address 3</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">Space-padded</td></tr>
+            <tr><td class="bt-off">182–189</td><td class="bt-len">8</td><td class="bt-field">Support Phone Number</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Raw hex, not ASCII-converted</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note-box ok"><span class="nb-icon">✓</span><span>Minimum total data size: <strong>190 bytes</strong>. No repeating records.</span></div>
+      </div>
+
+      <!-- ══ TABLE 02 ══ -->
+      <div class="docs-section" id="sec-t02">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">💳</div>
+          <div>
+            <div class="docs-section-title">Table 02 — BIN Range</div>
+            <div class="docs-section-sub">PAN range whitelist — defines accepted card number ranges</div>
+          </div>
+          <div class="docs-table-id-pill">Table ID 0x02</div>
+        </div>
+        <div class="docs-prose">
+          Contains a count followed by <strong>N repeating BIN entries</strong>. Each entry defines one PAN range: a low bound, high bound, human-readable name, issuer index, and PAN length. The parser loops exactly <code>count</code> times advancing a byte index through each fixed-size entry (34 bytes each).
+        </div>
+
+        <div class="flow-diagram">
+          <div class="flow-box fb-header"><div class="fb-bytes">byte 0</div><div class="fb-name">Table ID</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">1–2</div><div class="fb-name">Length</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-var"><div class="fb-bytes">3–4</div><div class="fb-name">Total BIN Count</div><div class="fb-enc">2 B dec</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-repeat-wrap">
+            <div class="flow-repeat-label">× COUNT</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">Range ID</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">5 B</div><div class="fb-name">PAN Low</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">5 B</div><div class="fb-name">PAN High</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">20 B</div><div class="fb-name">Range Name</div><div class="fb-enc">ANS</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">Issuer Idx</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">PAN Len</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">RFU</div></div>
+          </div>
+        </div>
+
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Byte Offset</th><th>Length</th><th>Field</th><th>Encoding</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="bt-off">0</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Always 0x02</td></tr>
+            <tr><td class="bt-off">1–2</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">3–4</td><td class="bt-len">2</td><td class="bt-field">Total BIN Count</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"><code>parseInt(hex, 10)</code> — drives loop</td></tr>
+            <tr style="background:rgba(188,140,255,.03)"><td colspan="5" style="padding:6px 16px;font-size:.7rem;color:var(--purple);font-weight:700;letter-spacing:.06em">↻ REPEAT × COUNT (each entry = 34 bytes, index starts at 5)</td></tr>
+            <tr><td class="bt-off">idx+0</td><td class="bt-len">1</td><td class="bt-field">PAN Range ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Unique entry identifier</td></tr>
+            <tr><td class="bt-off">idx+1</td><td class="bt-len">5</td><td class="bt-field">PAN Range Low</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">First 10 digits (BCD)</td></tr>
+            <tr><td class="bt-off">idx+6</td><td class="bt-len">5</td><td class="bt-field">PAN Range High</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Last 10 digits (BCD)</td></tr>
+            <tr><td class="bt-off">idx+11</td><td class="bt-len">20</td><td class="bt-field">PAN Range Name</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">Card scheme name e.g. "VISA"</td></tr>
+            <tr><td class="bt-off">idx+31</td><td class="bt-len">1</td><td class="bt-field">Issuer Index</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">References issuer table</td></tr>
+            <tr><td class="bt-off">idx+32</td><td class="bt-len">1</td><td class="bt-field">PAN Length</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Expected card number length</td></tr>
+            <tr><td class="bt-off">idx+33</td><td class="bt-len">1</td><td class="bt-field">RFU</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Reserved for future use</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- ══ TABLE 03 ══ -->
+      <div class="docs-section" id="sec-t03">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">📡</div>
+          <div>
+            <div class="docs-section-title">Table 03 — Communication Parameters</div>
+            <div class="docs-section-sub">Host connectivity configuration: NII, timeouts, protocol type</div>
+          </div>
+          <div class="docs-table-id-pill">Table ID 0x03</div>
+        </div>
+        <div class="docs-prose">
+          Fixed-size header followed by a variable-length communications parameter blob. Timeout values are stored as a single byte and decoded as a <strong>base-10 decimal</strong> integer (seconds). No repeat structure.
+        </div>
+
+        <div class="flow-diagram">
+          <div class="flow-box fb-header"><div class="fb-bytes">byte 0</div><div class="fb-name">Table ID</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">1–2</div><div class="fb-name">Length</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">3–4</div><div class="fb-name">NII</div><div class="fb-enc">2 B HEX</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">5</div><div class="fb-name">Connect Timeout</div><div class="fb-enc">1 B dec secs</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">6</div><div class="fb-name">Response Timeout</div><div class="fb-enc">1 B dec secs</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">7</div><div class="fb-name">Primary Comm Type</div><div class="fb-enc">1 B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">8</div><div class="fb-name">Secondary Comm Type</div><div class="fb-enc">1 B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">9–10</div><div class="fb-name">Param Length</div><div class="fb-enc">2 B HEX</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-var"><div class="fb-bytes">11+</div><div class="fb-name">Comm Parameters blob</div><div class="fb-enc">variable</div></div>
+        </div>
+
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Byte Offset</th><th>Length</th><th>Field</th><th>Encoding</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="bt-off">0</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Always 0x03</td></tr>
+            <tr><td class="bt-off">1–2</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">3–4</td><td class="bt-len">2</td><td class="bt-field">NII (Network Int. ID)</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">ISO 8583 NII field</td></tr>
+            <tr><td class="bt-off">5</td><td class="bt-len">1</td><td class="bt-field">Connect Timeout</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"><strong>parseInt(hex, 10)</strong> — seconds</td></tr>
+            <tr><td class="bt-off">6</td><td class="bt-len">1</td><td class="bt-field">Response Timeout</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"><strong>parseInt(hex, 10)</strong> — seconds</td></tr>
+            <tr><td class="bt-off">7</td><td class="bt-len">1</td><td class="bt-field">Primary Comm Type</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">e.g. 01=TCP, 02=Serial</td></tr>
+            <tr><td class="bt-off">8</td><td class="bt-len">1</td><td class="bt-field">Secondary Comm Type</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Fallback channel</td></tr>
+            <tr><td class="bt-off">9–10</td><td class="bt-len">2</td><td class="bt-field">Comm Param Length</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Length of next field</td></tr>
+            <tr><td class="bt-off">11+</td><td class="bt-len">N</td><td class="bt-field">Communication Parameters</td><td><span class="bt-enc enc-bin">MIXED</span></td><td class="bt-note">IP, port, APN etc. — parsed by <code>CommunicationParameters.build()</code></td></tr>
+          </tbody>
+        </table></div>
+        <div class="note-box warn"><span class="nb-icon">⚠️</span><span>Timeout values use <strong>base-10 decode</strong> (Kotlin <code>.toLong()</code>). Parsing them as hex gives wrong values — e.g. byte <code>0x30</code> = 30 seconds, not 48.</span></div>
+      </div>
+
+      <!-- ══ TABLE 05 ══ -->
+      <div class="docs-section" id="sec-t05">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">🔐</div>
+          <div>
+            <div class="docs-section-title">Table 05 — EMV Parameters</div>
+            <div class="docs-section-sub">Per-AID EMV kernel configuration — TAC, DDOL, TDOL, floor limits</div>
+          </div>
+          <div class="docs-table-id-pill">Table ID 0x05</div>
+        </div>
+        <div class="docs-prose">
+          Contains one record per AID (Application Identifier). Each record has <strong>variable-length AID, DDOL and TDOL fields</strong> — their length bytes must be decoded as <strong>base-10</strong> (not hex) to get the correct byte count for the next read. Getting the radix wrong here cascades every subsequent field offset.
+        </div>
+
+        <div class="flow-diagram">
+          <div class="flow-box fb-header"><div class="fb-bytes">byte 0</div><div class="fb-name">Table ID</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">1–2</div><div class="fb-name">Length</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-var"><div class="fb-bytes">3</div><div class="fb-name">Record Count</div><div class="fb-enc">1 B dec</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-repeat-wrap">
+            <div class="flow-repeat-label">× RECORD COUNT (idx starts at 4)</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">2 B</div><div class="fb-name">AID Len</div><div class="fb-enc">dec10</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat fb-var"><div class="fb-bytes">N B</div><div class="fb-name">AID</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">20 B</div><div class="fb-name">AID Name</div><div class="fb-enc">ANS</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">2 B</div><div class="fb-name">App Version</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">DDOL Len</div><div class="fb-enc">dec10</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat fb-var"><div class="fb-bytes">N B</div><div class="fb-name">DDOL</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">TDOL Len</div><div class="fb-enc">dec10</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat fb-var"><div class="fb-bytes">N B</div><div class="fb-name">TDOL</div></div>
+            <div class="flow-arrow">…</div>
+          </div>
+        </div>
+
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Byte Offset</th><th>Length</th><th>Field</th><th>Encoding</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="bt-off">0</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Always 0x05</td></tr>
+            <tr><td class="bt-off">1–2</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">3</td><td class="bt-len">1</td><td class="bt-field">Parameter Record Count</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note">Number of AID records</td></tr>
+            <tr style="background:rgba(188,140,255,.03)"><td colspan="5" style="padding:6px 16px;font-size:.7rem;color:var(--purple);font-weight:700;letter-spacing:.06em">↻ REPEAT × COUNT (idx starts at 4, variable entry size)</td></tr>
+            <tr><td class="bt-off">idx</td><td class="bt-len">2</td><td class="bt-field">AID Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"><strong>parseInt(hex, 10)</strong> — controls next read</td></tr>
+            <tr><td class="bt-off">idx+2</td><td class="bt-len">AID Len</td><td class="bt-field">AID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">e.g. A0000000031010</td></tr>
+            <tr><td class="bt-off">+AID</td><td class="bt-len">20</td><td class="bt-field">AID Name</td><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td class="bt-note">e.g. "VISA CREDIT"</td></tr>
+            <tr><td class="bt-off">+20</td><td class="bt-len">2</td><td class="bt-field">Application Version</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">EMV kernel version</td></tr>
+            <tr><td class="bt-off">+2</td><td class="bt-len">1</td><td class="bt-field">Default DDOL Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"><strong>parseInt(hex, 10)</strong></td></tr>
+            <tr><td class="bt-off">+1</td><td class="bt-len">DDOL Len</td><td class="bt-field">Default DDOL</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Dynamic DOL template</td></tr>
+            <tr><td class="bt-off">+DDOL</td><td class="bt-len">1</td><td class="bt-field">Default TDOL Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"><strong>parseInt(hex, 10)</strong></td></tr>
+            <tr><td class="bt-off">+1</td><td class="bt-len">TDOL Len</td><td class="bt-field">Default TDOL</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Transaction DOL template</td></tr>
+            <tr><td class="bt-off">+TDOL</td><td class="bt-len">5</td><td class="bt-field">TAC Default</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Terminal Action Code</td></tr>
+            <tr><td class="bt-off">+5</td><td class="bt-len">5</td><td class="bt-field">TAC Denial</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">+5</td><td class="bt-len">5</td><td class="bt-field">TAC Online</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">+5</td><td class="bt-len">4</td><td class="bt-field">Threshold (Biased Random)</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Amount threshold</td></tr>
+            <tr><td class="bt-off">+4</td><td class="bt-len">1</td><td class="bt-field">Max Target % (Biased)</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">0–100</td></tr>
+            <tr><td class="bt-off">+1</td><td class="bt-len">1</td><td class="bt-field">Target % (Random)</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">0–100</td></tr>
+            <tr><td class="bt-off">+1</td><td class="bt-len">6</td><td class="bt-field">Terminal Floor Limit</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Contact floor limit</td></tr>
+            <tr><td class="bt-off">+6</td><td class="bt-len">5</td><td class="bt-field">CL TAC Default</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Contactless TAC</td></tr>
+            <tr><td class="bt-off">+5</td><td class="bt-len">5</td><td class="bt-field">CL TAC Denial</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">+5</td><td class="bt-len">5</td><td class="bt-field">CL TAC Online</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">+5</td><td class="bt-len">6</td><td class="bt-field">CL Max Limit</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Max CL txn amount</td></tr>
+            <tr><td class="bt-off">+6</td><td class="bt-len">6</td><td class="bt-field">CL Offline Limit</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">CL offline cumulative limit</td></tr>
+            <tr><td class="bt-off">+6</td><td class="bt-len">6</td><td class="bt-field">CL CVM Limit</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">CL CVM required above this</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note-box warn"><span class="nb-icon">⚠️</span><span>AID Length, DDOL Length, TDOL Length — all decoded as <strong>base-10</strong> (Kotlin <code>.toInt()</code>). Using base-16 here misreads the byte count and corrupts every field after it in the record.</span></div>
+      </div>
+
+      <!-- ══ TABLE 06 ══ -->
+      <div class="docs-section" id="sec-t06">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">🔑</div>
+          <div>
+            <div class="docs-section-title">Table 06 — EMV CA Public Keys</div>
+            <div class="docs-section-sub">Certificate Authority keys used for offline card authentication</div>
+          </div>
+          <div class="docs-table-id-pill">Table ID 0x06</div>
+        </div>
+        <div class="docs-prose">
+          Contains a count followed by N CA key entries. Each key has a variable-length exponent and modulus — their length fields are decoded as <strong>base-16 (hex)</strong> (Kotlin <code>.toLong(16)</code>), unlike Table 05. The modulus can be 128–248 bytes depending on key strength.
+        </div>
+
+        <div class="flow-diagram">
+          <div class="flow-box fb-header"><div class="fb-bytes">byte 0</div><div class="fb-name">Table ID</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">1–2</div><div class="fb-name">Length</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-var"><div class="fb-bytes">3</div><div class="fb-name">Key Count</div><div class="fb-enc">1 B dec</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-repeat-wrap">
+            <div class="flow-repeat-label">× KEY COUNT (idx starts at 4)</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">5 B</div><div class="fb-name">RID</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">Key Index</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">Exp Len</div><div class="fb-enc">hex16</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat fb-var"><div class="fb-bytes">N B</div><div class="fb-name">Exponent</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">1 B</div><div class="fb-name">Mod Len</div><div class="fb-enc">hex16</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat fb-var"><div class="fb-bytes">N B</div><div class="fb-name">Modulus</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-repeat"><div class="fb-bytes">20 B</div><div class="fb-name">Hash</div><div class="fb-enc">SHA-1</div></div>
+          </div>
+        </div>
+
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Byte Offset</th><th>Length</th><th>Field</th><th>Encoding</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="bt-off">0</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Always 0x06</td></tr>
+            <tr><td class="bt-off">1–2</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">3</td><td class="bt-len">1</td><td class="bt-field">Key Count</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note">parseInt(hex, 10)</td></tr>
+            <tr style="background:rgba(188,140,255,.03)"><td colspan="5" style="padding:6px 16px;font-size:.7rem;color:var(--purple);font-weight:700;letter-spacing:.06em">↻ REPEAT × COUNT (idx starts at 4)</td></tr>
+            <tr><td class="bt-off">idx</td><td class="bt-len">5</td><td class="bt-field">Public Key RID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Registered Application Provider ID</td></tr>
+            <tr><td class="bt-off">idx+5</td><td class="bt-len">1</td><td class="bt-field">Public Key Index</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Key version/slot</td></tr>
+            <tr><td class="bt-off">idx+6</td><td class="bt-len">1</td><td class="bt-field">Exponent Length</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"><strong>parseInt(hex, 16)</strong> — usually 1 or 3</td></tr>
+            <tr><td class="bt-off">idx+7</td><td class="bt-len">Exp Len</td><td class="bt-field">Public Key Exponent</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Typically 03 or 010001</td></tr>
+            <tr><td class="bt-off">+Exp</td><td class="bt-len">1</td><td class="bt-field">Modulus Length</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"><strong>parseInt(hex, 16)</strong> — 128–248</td></tr>
+            <tr><td class="bt-off">+1</td><td class="bt-len">Mod Len</td><td class="bt-field">Public Key Modulus</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">RSA modulus bytes</td></tr>
+            <tr><td class="bt-off">+Mod</td><td class="bt-len">20</td><td class="bt-field">Hash</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">SHA-1 of key components</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note-box info"><span class="nb-icon">ℹ️</span><span>Exponent and modulus lengths are decoded as <strong>base-16</strong> (hex), unlike Table 05's AID/DDOL/TDOL which are base-10. This matches Kotlin's explicit <code>.toLong(16)</code>.</span></div>
+      </div>
+
+      <!-- ══ TABLE 11 ══ -->
+      <div class="docs-section" id="sec-t11">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">⚙️</div>
+          <div>
+            <div class="docs-section-title">Table 11 — Transaction Configuration</div>
+            <div class="docs-section-sub">Settlement scheduling, advice intervals, auto-settlement flags</div>
+          </div>
+          <div class="docs-table-id-pill">Table ID 0x11</div>
+        </div>
+        <div class="docs-prose">
+          A compact fixed-format table. All fields are stored as raw hex. No repeat structure — one record per block.
+        </div>
+
+        <div class="flow-diagram">
+          <div class="flow-box fb-header"><div class="fb-bytes">byte 0</div><div class="fb-name">Table ID</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-header"><div class="fb-bytes">1–2</div><div class="fb-name">Length</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">3–4</div><div class="fb-name">Advice Interval</div><div class="fb-enc">2 B dec</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">5</div><div class="fb-name">Auto Settle Flag</div><div class="fb-enc">1 B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">6–7</div><div class="fb-name">Settle Time</div><div class="fb-enc">2 B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">8–9</div><div class="fb-name">Settle Frequency</div><div class="fb-enc">2 B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">10–11</div><div class="fb-name">Sub-Total Interval</div><div class="fb-enc">2 B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><div class="fb-bytes">12–13</div><div class="fb-name">Batch Time</div><div class="fb-enc">2 B</div></div>
+        </div>
+
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Byte Offset</th><th>Length</th><th>Field</th><th>Encoding</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="bt-off">0</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Always 0x11</td></tr>
+            <tr><td class="bt-off">1–2</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">3–4</td><td class="bt-len">2</td><td class="bt-field">Advice Msg Upload Interval</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note">parseInt(hex, 10) minutes</td></tr>
+            <tr><td class="bt-off">5</td><td class="bt-len">1</td><td class="bt-field">Auto Settlement Enable</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">01 = enabled, 00 = disabled</td></tr>
+            <tr><td class="bt-off">6–7</td><td class="bt-len">2</td><td class="bt-field">Auto Settlement Time</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">HHMM format</td></tr>
+            <tr><td class="bt-off">8–9</td><td class="bt-len">2</td><td class="bt-field">Auto Settlement Frequency</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Daily/weekly interval</td></tr>
+            <tr><td class="bt-off">10–11</td><td class="bt-len">2</td><td class="bt-field">Settlement Subtotal Interval</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Minutes between subtotals</td></tr>
+            <tr><td class="bt-off">12–13</td><td class="bt-len">2</td><td class="bt-field">Settlement Batch Time</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Cutover time HHMM</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note-box ok"><span class="nb-icon">✓</span><span>All offsets fixed. No variable-length or repeating fields. Total data: <strong>11 bytes minimum</strong>.</span></div>
+      </div>
+
+      <!-- ══ TABLE 16 ══ -->
+      <div class="docs-section" id="sec-t16">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">🆔</div>
+          <div>
+            <div class="docs-section-title">Table 16 — IDS Config</div>
+            <div class="docs-section-sub">Integrated Data Store operator identifiers</div>
+          </div>
+          <div class="docs-table-id-pill">Table ID 0x16</div>
+        </div>
+        <div class="docs-prose">
+          Contains N operator IDS entries. Each entry carries an operator identifier and an IDS value (8 bytes each). The parser loops from entry 0 to count-1, advancing 16 bytes per iteration.
+        </div>
+
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Byte Offset</th><th>Length</th><th>Field</th><th>Encoding</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="bt-off">0</td><td class="bt-len">1</td><td class="bt-field">Table ID</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note">Always 0x16</td></tr>
+            <tr><td class="bt-off">1–2</td><td class="bt-len">2</td><td class="bt-field">Length</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">3</td><td class="bt-len">1</td><td class="bt-field">Entry Count</td><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td class="bt-note">Number of IDS entries</td></tr>
+            <tr style="background:rgba(188,140,255,.03)"><td colspan="5" style="padding:6px 16px;font-size:.7rem;color:var(--purple);font-weight:700;letter-spacing:.06em">↻ REPEAT × COUNT (idx starts at 4, +16 bytes per entry)</td></tr>
+            <tr><td class="bt-off">idx</td><td class="bt-len">8</td><td class="bt-field">Operator Identifier</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"></td></tr>
+            <tr><td class="bt-off">idx+8</td><td class="bt-len">8</td><td class="bt-field">IDS</td><td><span class="bt-enc enc-hex">HEX</span></td><td class="bt-note"></td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="note-box warn">
+          <span class="nb-icon">⚠️</span>
+          <div>
+            <strong>Kotlin source has two bugs in this table:</strong><br>
+            1. <code>val index = 3</code> — declared as immutable (<code>val</code>) so it never advances → both Operator ID and IDS always read from the same offset.<br>
+            2. Loop starts at <code>x = 1</code>, skipping the first entry entirely.<br>
+            <strong>This parser corrects both bugs</strong>: uses <code>var idx = 4</code>, loop from 0, advancing +8 per field.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Encoding Key ── -->
+      <div class="docs-section" id="sec-encoding">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">🔤</div>
+          <div>
+            <div class="docs-section-title">Encoding Reference</div>
+            <div class="docs-section-sub">How each data type is stored on the wire</div>
+          </div>
+        </div>
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Type</th><th>Wire Format</th><th>JS Decode</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><span class="bt-enc enc-hex">HEX</span></td><td>Raw binary as hex nibbles</td><td><code>parseInt(v, 16)</code> or display raw</td><td><code>3F</code> = 63</td></tr>
+            <tr><td><span class="bt-enc enc-bcd">DECIMAL</span></td><td>Decimal digits encoded as ASCII</td><td><code>parseInt(v, 10)</code></td><td><code>0190</code> = 190 (not 400)</td></tr>
+            <tr><td><span class="bt-enc enc-asc">ANS→ASCII</span></td><td>Hex-encoded ASCII characters</td><td><code>hexToAscii(v)</code></td><td><code>56495341</code> = "VISA"</td></tr>
+            <tr><td><span class="bt-enc enc-bin">MIXED</span></td><td>Combination of above per field</td><td>Per-field decode</td><td>Table-specific</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <!-- ── Known Issues ── -->
+      <div class="docs-section" id="sec-notes">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">⚠️</div>
+          <div>
+            <div class="docs-section-title">Known Issues & Corrections</div>
+            <div class="docs-section-sub">Bugs found in reference Kotlin source vs. this parser</div>
+          </div>
+        </div>
+        <div class="byte-table-wrap"><table class="byte-table">
+          <thead><tr><th>Table</th><th>Field</th><th>Kotlin Code</th><th>Bug</th><th>This Parser</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="bt-enc enc-hex">03</span></td>
+              <td class="bt-field">Connect/Response Timeout</td>
+              <td><code>.toLong()</code></td>
+              <td class="bt-note">Base-16 decode gives wrong seconds</td>
+              <td class="bt-type">Fixed → <code>parseInt(hex, 10)</code></td>
+            </tr>
+            <tr>
+              <td><span class="bt-enc enc-hex">05</span></td>
+              <td class="bt-field">AID Len / DDOL Len / TDOL Len</td>
+              <td><code>.toInt()</code></td>
+              <td class="bt-note">Must be base-10; base-16 cascades all field offsets</td>
+              <td class="bt-type">Fixed → <code>parseInt(hex, 10)</code></td>
+            </tr>
+            <tr>
+              <td><span class="bt-enc enc-hex">16</span></td>
+              <td class="bt-field">index variable</td>
+              <td><code>val index = 3</code></td>
+              <td class="bt-note"><code>val</code> never increments → reads same bytes every iteration</td>
+              <td class="bt-type">Fixed → <code>var idx = 4; idx += 8</code></td>
+            </tr>
+            <tr>
+              <td><span class="bt-enc enc-hex">16</span></td>
+              <td class="bt-field">Loop range</td>
+              <td><code>for (x in 1 until count)</code></td>
+              <td class="bt-note">Skips first entry (x=0)</td>
+              <td class="bt-type">Fixed → <code>for (x in 0 until count)</code></td>
+            </tr>
+          </tbody>
+        </table></div>
+      </div>
+
+    </div><!-- /docs-content -->
+  </div><!-- /docs-body -->
+</div><!-- /docsOverlay -->
+
+<script>
+function openDocs() {
+  document.getElementById('docsOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  updateActiveToc();
+}
+function closeDocs() {
+  document.getElementById('docsOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Close on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDocs(); });
+
+function scrollDoc(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const content = document.getElementById('docsContent');
+  content.scrollTo({ top: el.offsetTop - 24, behavior: 'smooth' });
+  updateActiveToc(id);
+}
+function updateActiveToc(activeId) {
+  document.querySelectorAll('#docsToc .toc-link').forEach(link => {
+    link.classList.remove('active');
+    const fn = link.getAttribute('onclick') || '';
+    const match = fn.match(/'([^']+)'/);
+    if (match && activeId && match[1] === activeId) link.classList.add('active');
+  });
+}
+// Highlight TOC on scroll
+document.getElementById('docsContent')?.addEventListener('scroll', function() {
+  const sections = ['sec-overview','sec-flow','sec-t01','sec-t02','sec-t03','sec-t05','sec-t06','sec-t11','sec-t16','sec-encoding','sec-notes'];
+  let current = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop - 80 <= this.scrollTop) current = id;
+  });
+  updateActiveToc(current);
+});
 </script>
 </body>
 </html>

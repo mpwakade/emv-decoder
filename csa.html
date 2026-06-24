@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service Area Hex Parser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0E14; --panel:#121826; --panel-raised:#1B2335; --line:#283044;
+    --text:#E7ECF3; --muted:#8A96AC; --muted-dim:#5C6678;
+    --aqua:#22D3C4; --aqua-dim:#1A6E66;
+    --amber:#FFB347;
+    --danger:#FF6B6B;
+    --display:'Space Grotesk',sans-serif;
+    --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --data:'JetBrains Mono',Consolas,Menlo,monospace;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{transition:none !important; animation:none !important;} }
+
+  body{
+    margin:0; background:var(--ink); color:var(--text); font-family:var(--body);
+    background-image:radial-gradient(circle at 12% 0%, rgba(34,211,196,0.05), transparent 45%);
+  }
+  .page{max-width:980px; margin:0 auto; padding:32px 20px 64px;}
+
+  .eyebrow{
+    font-family:var(--data); font-size:11px; letter-spacing:.12em; color:var(--aqua);
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  h1{
+    font-family:var(--display); font-weight:700; font-size:clamp(24px,4vw,32px);
+    margin:0 0 10px; letter-spacing:-0.01em;
+  }
+  p.sub{color:var(--muted); margin:0 0 22px; font-size:14px; line-height:1.55; max-width:620px;}
+
+  .ref-toolbar{margin-bottom:26px;}
+  .ref-toolbar-label{font-size:11px; color:var(--muted-dim); font-family:var(--data); margin-bottom:10px; letter-spacing:.05em;}
+  .ref-buttons{display:flex; gap:8px; flex-wrap:wrap;}
+  .ref-btn{
+    background:var(--panel); color:var(--text); border:1px solid var(--line);
+    border-radius:7px; padding:8px 13px; font-size:12.5px; font-family:var(--body);
+    font-weight:500; cursor:pointer; display:flex; align-items:center; gap:7px;
+    transition:border-color .15s ease, transform .12s ease;
+  }
+  .ref-btn:hover{border-color:var(--aqua-dim);}
+  .ref-btn:active{transform:scale(.97);}
+  .ref-btn .ref-dot{width:7px; height:7px; border-radius:50%; background:var(--aqua); flex:0 0 auto;}
+
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; margin-bottom:22px;
+  }
+  label.field-label{font-size:11.5px; color:var(--muted); display:block; margin-bottom:8px; font-weight:500;}
+  textarea{
+    width:100%; min-height:84px; resize:vertical; background:var(--ink);
+    color:var(--text); border:1px solid var(--line); border-radius:8px;
+    padding:11px 12px; font-family:var(--data); font-size:13px; line-height:1.5;
+  }
+  textarea:focus, input:focus, button:focus-visible, select:focus-visible{
+    outline:2px solid var(--aqua); outline-offset:1px;
+  }
+  .row{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;}
+
+  button{
+    background:var(--aqua); color:#06201D; border:none; border-radius:7px;
+    padding:9px 16px; font-weight:600; font-size:13px; cursor:pointer; font-family:var(--body);
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  button.secondary{background:transparent; color:var(--text); border:1px solid var(--line);}
+  button.danger-outline{background:transparent; color:var(--danger); border:1px solid rgba(255,107,107,0.4);}
+  button:hover{opacity:.88;}
+  button:active{transform:scale(.97);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+
+  #status{font-size:12.5px; color:var(--muted); font-family:var(--data);}
+  #status.error{color:var(--danger);}
+  #status.ok{color:var(--aqua);}
+
+  /* ---- Updated hex output panel ---- */
+  .output-panel{
+    background:var(--panel); border:1px solid var(--aqua-dim); border-radius:var(--radius);
+    padding:16px 18px; margin-bottom:22px;
+  }
+  .output-panel .out-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .output-panel .out-title{font-family:var(--display); font-weight:600; font-size:14px;}
+  .modified-badge{
+    display:none; background:rgba(255,179,71,0.12); color:var(--amber); border:1px solid rgba(255,179,71,0.35);
+    border-radius:5px; padding:2px 8px; font-size:10.5px; font-family:var(--data); letter-spacing:.04em;
+  }
+  .modified-badge.show{display:inline-block;}
+  .hex-output{
+    font-family:var(--data); font-size:13px; color:var(--aqua); background:var(--ink);
+    border:1px solid var(--line); border-radius:8px; padding:11px 12px; word-break:break-all;
+    line-height:1.6; user-select:all;
+  }
+  .output-panel .out-actions{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+
+  /* ---- Summary chips ---- */
+  .summary-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:26px;}
+  .chip{
+    flex:1 1 140px; background:var(--panel); border:1px solid var(--line);
+    border-left:3px solid var(--aqua-dim); border-radius:8px; padding:11px 13px;
+  }
+  .chip .chip-eyebrow{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted-dim); margin-bottom:5px; font-family:var(--data);}
+  .chip .chip-value{font-family:var(--display); font-weight:600; font-size:14.5px; color:var(--text); line-height:1.3;}
+  .chip.empty{opacity:.45;}
+
+  /* ---- Line-map nav ---- */
+  .line-nav-wrap{margin-bottom:26px;}
+  .line-nav-label{font-size:11px; color:var(--muted-dim); font-family:var(--data); margin-bottom:14px; letter-spacing:.05em;}
+  .line-nav{
+    position:relative; display:flex; justify-content:space-between; align-items:flex-start;
+    padding:0 4px; overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .line-nav::-webkit-scrollbar{display:none;}
+  .line-nav::before{
+    content:''; position:absolute; top:7px; left:14px; right:14px; height:2px;
+    background:linear-gradient(90deg, var(--aqua-dim), var(--aqua), var(--aqua-dim));
+  }
+  .stop{
+    position:relative; display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:none; border:none; cursor:pointer; flex:0 0 auto; padding:0 8px; min-width:64px;
+  }
+  .stop .dot{
+    width:16px; height:16px; border-radius:50%; background:var(--ink); border:2px solid var(--aqua);
+    transition:background .15s ease, transform .15s ease; z-index:1;
+  }
+  .stop:hover .dot{transform:scale(1.15);}
+  .stop.active .dot{background:var(--aqua); box-shadow:0 0 0 4px rgba(34,211,196,0.18);}
+  .stop .stop-label{font-family:var(--data); font-size:10.5px; color:var(--muted); white-space:nowrap;}
+  .stop.active .stop-label{color:var(--aqua); font-weight:600;}
+
+  /* ---- Field filter ---- */
+  .filter-row{display:flex; gap:10px; align-items:center; margin-bottom:18px;}
+  input#fieldFilter{
+    flex:1; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:9px 12px; color:var(--text); font-family:var(--body); font-size:13px;
+  }
+  input#fieldFilter::placeholder{color:var(--muted-dim);}
+
+  /* ---- Block cards ---- */
+  details.block-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    margin-bottom:14px; overflow:hidden; scroll-margin-top:24px;
+  }
+  details.block-card summary{
+    list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center;
+    justify-content:space-between; font-family:var(--display); font-weight:600; font-size:14px;
+    color:var(--text); background:var(--panel-raised);
+  }
+  details.block-card summary::-webkit-details-marker{display:none;}
+  details.block-card summary .chevron{
+    width:9px; height:9px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted);
+    transform:rotate(-45deg); transition:transform .15s ease; margin-left:auto;
+  }
+  details.block-card[open] summary .chevron{transform:rotate(45deg);}
+  summary .group-count{font-family:var(--data); font-size:11px; color:var(--muted-dim); font-weight:400; margin-left:10px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th,td{padding:9px 16px; border-bottom:1px solid var(--line); text-align:left;}
+  th{
+    color:var(--muted-dim); font-weight:500; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.05em; font-family:var(--data); background:var(--panel);
+  }
+  tr:last-child td{border-bottom:none;}
+  tr.data-row:hover{background:rgba(255,255,255,0.02);}
+  tr.data-row.hidden{display:none;}
+  tr.data-row.edited{background:rgba(255,179,71,0.05);}
+  td.fname{font-weight:500;}
+  td.fname-decodable{cursor:pointer; text-decoration:underline dotted var(--muted-dim); text-underline-offset:3px;}
+  td.bin{font-family:var(--data); font-size:11px; color:var(--muted); word-break:break-all;}
+  td.dec{font-family:var(--data); font-weight:600; color:var(--text);}
+  td.hex{font-family:var(--data); color:var(--amber); font-size:12px;}
+  td.decoded{color:var(--aqua); font-weight:600; font-size:12.5px;}
+  td.decoded.none{color:var(--muted-dim); font-weight:400;}
+  td.edit-cell{width:1%; white-space:nowrap;}
+  .edit-btn{
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    width:26px; height:26px; padding:0; border-radius:6px; font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .edit-btn:hover{color:var(--aqua); border-color:var(--aqua-dim);}
+  .badge{
+    display:inline-block; background:var(--ink); border:1px solid var(--line);
+    border-radius:5px; padding:2px 7px; font-size:10.5px; color:var(--muted); font-family:var(--data);
+  }
+
+  details.bin-details{margin-top:8px;}
+  details.bin-details summary{
+    cursor:pointer; color:var(--muted); font-size:12.5px; margin-bottom:10px; font-family:var(--data);
+  }
+  .bitstream{
+    font-family:var(--data); font-size:11px; color:var(--muted); word-break:break-all;
+    line-height:1.7; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:12px;
+  }
+
+  /* ---- Modal ---- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(5,7,11,0.72); backdrop-filter:blur(2px);
+    display:none; align-items:center; justify-content:center; padding:20px; z-index:100;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    max-width:560px; width:100%; max-height:80vh; overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal-head{
+    position:sticky; top:0; background:var(--panel-raised); border-bottom:1px solid var(--line);
+    padding:16px 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  }
+  .modal-head h3{font-family:var(--display); font-size:16px; margin:0 0 4px; font-weight:600;}
+  .modal-head p{margin:0; font-size:12px; color:var(--muted); line-height:1.5;}
+  .modal-close{
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    width:28px; height:28px; border-radius:6px; padding:0; flex:0 0 auto;
+    font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .modal-close:hover{color:var(--text); border-color:var(--aqua-dim);}
+  .modal-body{padding:14px 18px 18px;}
+  .modal-body table{font-size:13px;}
+  .modal-body th, .modal-body td{padding:8px 10px;}
+  .modal-body td.mhex{font-family:var(--data); color:var(--amber); font-size:12.5px;}
+  .modal-body td.mname{color:var(--text);}
+  .edit-field-label{font-size:11.5px; color:var(--muted); display:block; margin:14px 0 6px; font-weight:500;}
+  .edit-field-label:first-child{margin-top:0;}
+  select#editValueSelect, input#editValueInput{
+    width:100%; background:var(--ink); border:1px solid var(--line); border-radius:7px;
+    padding:9px 11px; color:var(--text); font-family:var(--data); font-size:13px;
+  }
+  .edit-meta{font-size:11.5px; color:var(--muted-dim); font-family:var(--data); margin-top:6px;}
+  .edit-warn{font-size:12px; color:var(--danger); margin-top:8px; display:none;}
+  .edit-warn.show{display:block;}
+  .modal-footer{display:flex; gap:8px; margin-top:18px;}
+
+  @media (max-width:640px){
+    .summary-row{flex-direction:column;}
+    .chip{flex:1 1 auto;}
+    th,td{padding:8px 10px; font-size:12px;}
+    td.bin{display:none;}
+    .ref-buttons{gap:6px;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">Pune Metro &middot; Smart Card Reader</div>
+  <h1>Service Area Hex Parser</h1>
+  <p class="sub">Paste a service-area hex dump below to decode it field by field. You can also edit any field's value &mdash; the tool re-encodes the bitstream and gives you back an updated hex string.</p>
+
+  <div class="ref-toolbar">
+    <div class="ref-toolbar-label">// Decoding reference &mdash; view raw lookup tables</div>
+    <div class="ref-buttons" id="refButtons"></div>
+  </div>
+
+  <section class="panel">
+    <label class="field-label" for="hexInput">Input service area hex string</label>
+    <textarea id="hexInput" spellcheck="false">310000060A1B6400F1550B00E3015E0002000000000A1B6400D14C0B0106003C00AF002AE0000A1B6400F15F0AFC26011D00E10038F0000A1B6400F1600AF67200B600E1004700000A1B6400D14B0AF5B3003A00E10036700000000000000000</textarea>
+    <div class="row">
+      <button onclick="parseHex()">Parse</button>
+      <button class="secondary" onclick="clearAll()">Clear</button>
+      <button class="secondary" onclick="copyJSON()">Copy as JSON</button>
+      <span id="status"></span>
+    </div>
+  </section>
+
+  <div class="output-panel">
+    <div class="out-head">
+      <span class="out-title">Updated Service Area (hex)</span>
+      <span class="modified-badge" id="modifiedBadge">MODIFIED</span>
+    </div>
+    <div class="hex-output" id="hexOutput">&mdash;</div>
+    <div class="out-actions">
+      <button onclick="copyUpdatedHex()">Copy hex</button>
+      <button class="secondary" onclick="loadUpdatedHexIntoInput()">Load into input box</button>
+      <button class="danger-outline" id="resetBtn" onclick="resetEdits()" disabled>Reset edits</button>
+    </div>
+  </div>
+
+  <div id="summary" class="summary-row"></div>
+
+  <div class="line-nav-wrap">
+    <div class="line-nav-label">// Record layout</div>
+    <nav class="line-nav" id="lineNav">
+      <button class="stop" data-target="group-General"><span class="dot"></span><span class="stop-label">General</span></button>
+      <button class="stop" data-target="group-History-1"><span class="dot"></span><span class="stop-label">Hist 1</span></button>
+      <button class="stop" data-target="group-History-2"><span class="dot"></span><span class="stop-label">Hist 2</span></button>
+      <button class="stop" data-target="group-History-3"><span class="dot"></span><span class="stop-label">Hist 3</span></button>
+      <button class="stop" data-target="group-History-4"><span class="dot"></span><span class="stop-label">Hist 4</span></button>
+      <button class="stop" data-target="group-Trailer"><span class="dot"></span><span class="stop-label">Trailer</span></button>
+    </nav>
+  </div>
+
+  <div class="filter-row">
+    <input type="text" id="fieldFilter" placeholder="Filter fields by name (e.g. balance, status, station)" oninput="filterRows()">
+  </div>
+
+  <div id="output"></div>
+
+  <details class="bin-details">
+    <summary>View full binary string</summary>
+    <div id="binaryView" class="bitstream">&mdash;</div>
+  </details>
+
+</div>
+
+<!-- Modal: used for both "view lookup table" and "edit field" -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalTitle">Title</h3>
+        <p id="modalSubtitle">Subtitle</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ================= Field map =================
+function historyBlock(n) {
+  const g = "History " + n;
+  return [
+    [g, "Acquirer ID", 8],
+    [g, "Operator ID", 16],
+    [g, "Terminal ID / Station ID", 12],
+    [g, "Device Category", 6],
+    [g, "Device Number", 6],
+    [g, "Transaction Date & Time", 24],
+    [g, "Transaction Sequence No.", 16],
+    [g, "Transaction Amount", 16],
+    [g, "Card Balance", 20],
+    [g, "Transaction Status", 4],
+    [g, "RFU", 8],
+  ];
+}
+
+const FIELD_MAP = [
+  ["General", "DataVersion No", 8],
+  ["General", "Language Info", 5],
+  ["General", "RFU", 3],
+  ["General", "Validation/Error Code", 8],
+  ["General", "Product Type", 8],
+  ["General", "Acquirer ID", 8],
+  ["General", "Operator ID", 16],
+  ["General", "Terminal ID / Station ID", 12],
+  ["General", "Device Category", 6],
+  ["General", "Device Number", 6],
+  ["General", "Transaction Date & Time", 24],
+  ["General", "Fare Amount", 16],
+  ["General", "Route No.", 16],
+  ["General", "Service Provider Data", 24],
+  ["General", "Transaction Status", 4],
+  ["General", "RFU", 4],
+  ...historyBlock(1),
+  ...historyBlock(2),
+  ...historyBlock(3),
+  ...historyBlock(4),
+  ["Trailer", "CRN", 48],
+  ["Trailer", "RFU", 8],
+];
+
+// Precompute bit offsets once (structure is fixed regardless of input value)
+const FIELD_POSITIONS = (() => {
+  let pos = 0;
+  return FIELD_MAP.map(([group, name, len], idx) => {
+    const f = { idx, group, name, len, pos };
+    pos += len;
+    return f;
+  });
+})();
+const TOTAL_BITS = FIELD_POSITIONS.reduce((s, f) => s + f.len, 0);
+
+// ================= Lookup tables =================
+function buildMap(rows) {
+  const map = {};
+  rows.forEach(r => { map[r.dec] = r.name; });
+  return map;
+}
+
+const PASS_TYPE_ROWS = [
+  { display: "01", dec: 1, name: "Stored Value Pass" },
+  { display: "02", dec: 2, name: "45 Trip / 30 days Pass" },
+  { display: "03", dec: 3, name: "60 Trip / 45 days Pass" },
+  { display: "04", dec: 4, name: "90 Trip / 75 days Pass" },
+];
+const LINE_ROWS = [
+  { display: "0001", dec: 1, name: "Line 1" },
+  { display: "0002", dec: 2, name: "Line 2" },
+];
+const STATION_ROWS = [
+  { display: "14", dec: 0x14, name: "Vanaz" },
+  { display: "13", dec: 0x13, name: "Sant Tukaram Nagar" },
+  { display: "3",  dec: 0x3,  name: "Bhosari" },
+  { display: "68", dec: 0x68, name: "Kasawadi" },
+  { display: "69", dec: 0x69, name: "Pugewadi" },
+  { display: "6A", dec: 0x6A, name: "Dapodi" },
+  { display: "7",  dec: 0x7,  name: "Garware College" },
+  { display: "8",  dec: 0x8,  name: "Anand Nagar" },
+  { display: "10", dec: 0x10, name: "Asalpha" },
+  { display: "11", dec: 0x11, name: "Jagruti Nagar" },
+  { display: "24", dec: 0x24, name: "VIVO Ghatkopar" },
+];
+const LANGUAGE_ROWS = [
+  { display: "0", dec: 0, name: "English" },
+  { display: "1", dec: 1, name: "Hindi" },
+  { display: "6", dec: 6, name: "Marathi" },
+];
+const TRANSACTION_TYPE_ROWS = [
+  { display: "1", dec: 1, name: "Pass Issuance" },
+  { display: "2", dec: 2, name: "Entry" },
+  { display: "3", dec: 3, name: "Exit" },
+  { display: "4", dec: 4, name: "Adjustment - Entry Mismatch" },
+  { display: "5", dec: 5, name: "Adjustment - Exit Mismatch" },
+  { display: "6", dec: 6, name: "Adjustment - Over stay" },
+  { display: "7", dec: 7, name: "Adjustment - Over Travel" },
+  { display: "8", dec: 8, name: "Pass Renewal" },
+  { display: "9", dec: 9, name: "Pass Refund" },
+];
+// Error Code field is only 8 bits (max 255), so 101/102/103 are treated as their
+// literal decimal values, not as 0x101/0x102/0x103 (which would overflow 8 bits).
+const ERROR_CODE_ROWS = [
+  { display: "0",   dec: 0,   name: "No Error" },
+  { display: "4",   dec: 4,   name: "Entry Mismatch" },
+  { display: "3",   dec: 3,   name: "Exit Mismatch" },
+  { display: "6",   dec: 6,   name: "Overstay" },
+  { display: "101", dec: 101, name: "Overtravel" },
+  { display: "102", dec: 102, name: "Exit Mismatch + Overtravel" },
+  { display: "103", dec: 103, name: "Overstay + Overtravel" },
+];
+
+const PASS_TYPE_MAP = buildMap(PASS_TYPE_ROWS);
+const LINE_MAP = buildMap(LINE_ROWS);
+const STATION_MAP = buildMap(STATION_ROWS);
+const LANGUAGE_MAP = buildMap(LANGUAGE_ROWS);
+const TRANSACTION_TYPE_MAP = buildMap(TRANSACTION_TYPE_ROWS);
+const ERROR_CODE_MAP = buildMap(ERROR_CODE_ROWS);
+
+const FIELD_LOOKUPS = {
+  "Language Info": LANGUAGE_MAP,
+  "Product Type": PASS_TYPE_MAP,
+  "Route No.": LINE_MAP,
+  "Terminal ID / Station ID": STATION_MAP,
+  "Transaction Status": TRANSACTION_TYPE_MAP,
+  "Validation/Error Code": ERROR_CODE_MAP,
+};
+const FIELD_LOOKUP_ROWS = {
+  "Language Info": LANGUAGE_ROWS,
+  "Product Type": PASS_TYPE_ROWS,
+  "Route No.": LINE_ROWS,
+  "Terminal ID / Station ID": STATION_ROWS,
+  "Transaction Status": TRANSACTION_TYPE_ROWS,
+  "Validation/Error Code": ERROR_CODE_ROWS,
+};
+
+const MAP_REFERENCE = [
+  { key: "pass",    label: "Pass Type",        field: "Product Type",             rows: PASS_TYPE_ROWS },
+  { key: "line",    label: "Line",              field: "Route No.",                rows: LINE_ROWS },
+  { key: "station", label: "Station",           field: "Terminal ID / Station ID", rows: STATION_ROWS },
+  { key: "lang",    label: "Language",          field: "Language Info",            rows: LANGUAGE_ROWS },
+  { key: "txn",     label: "Transaction Type",  field: "Transaction Status",       rows: TRANSACTION_TYPE_ROWS },
+  { key: "err",     label: "Error Code",        field: "Validation/Error Code",    rows: ERROR_CODE_ROWS },
+];
+
+function decodeField(name, dec) {
+  const table = FIELD_LOOKUPS[name];
+  if (!table) return null;
+  return table.hasOwnProperty(dec) ? table[dec] : "Unknown (" + dec + ")";
+}
+
+// ================= Bit/hex helpers =================
+function hexToBinary(hex) {
+  let bin = "";
+  for (const ch of hex) bin += parseInt(ch, 16).toString(2).padStart(4, "0");
+  return bin;
+}
+function binaryToHex(bin) {
+  let out = "";
+  for (let i = 0; i < bin.length; i += 4) {
+    const nibble = bin.slice(i, i + 4).padEnd(4, "0");
+    out += parseInt(nibble, 2).toString(16).toUpperCase();
+  }
+  return out;
+}
+function chunk(str, size) {
+  const out = [];
+  for (let i = 0; i < str.length; i += size) out.push(str.slice(i, i + size));
+  return out;
+}
+function slug(group) { return "group-" + group.replace(/\s+/g, "-"); }
+
+// ================= State =================
+let originalBinary = "";
+let currentBinary = "";
+let currentEditIdx = null;
+
+function clearAll() {
+  document.getElementById('hexInput').value = '';
+  document.getElementById('status').textContent = '';
+  document.getElementById('output').innerHTML = '';
+  document.getElementById('summary').innerHTML = '';
+  document.getElementById('binaryView').textContent = '\u2014';
+  document.getElementById('hexOutput').textContent = '\u2014';
+  document.getElementById('modifiedBadge').classList.remove('show');
+  document.getElementById('resetBtn').disabled = true;
+  originalBinary = "";
+  currentBinary = "";
+}
+
+function copyJSON() {
+  const json = buildParsedJSON();
+  navigator.clipboard.writeText(JSON.stringify(json, null, 2)).then(() => flashButtonText('Copy as JSON', 'Copied!'));
+}
+function copyUpdatedHex() {
+  const hex = binaryToHex(currentBinary);
+  navigator.clipboard.writeText(hex).then(() => flashButtonText('Copy hex', 'Copied!'));
+}
+function loadUpdatedHexIntoInput() {
+  document.getElementById('hexInput').value = binaryToHex(currentBinary);
+  parseHex();
+}
+function flashButtonText(matchText, tempText) {
+  const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === matchText);
+  if (!btn) return;
+  const original = btn.textContent;
+  btn.textContent = tempText;
+  setTimeout(() => btn.textContent = original, 1200);
+}
+
+function resetEdits() {
+  currentBinary = originalBinary;
+  renderAll();
+}
+
+function buildParsedJSON() {
+  const out = {};
+  FIELD_POSITIONS.forEach(f => {
+    out[f.group] = out[f.group] || {};
+    const slice = currentBinary.slice(f.pos, f.pos + f.len);
+    const dec = slice.length ? parseInt(slice, 2) : 0;
+    const hx = dec.toString(16).toUpperCase().padStart(Math.ceil(f.len / 4), "0");
+    out[f.group][f.name] = { bits: f.len, binary: slice, decimal: dec, hex: "0x" + hx, decoded: decodeField(f.name, dec) };
+  });
+  return out;
+}
+
+// ================= Line nav =================
+function setActiveStop(id) {
+  document.querySelectorAll('.stop').forEach(s => s.classList.toggle('active', s.dataset.target === id));
+}
+document.getElementById('lineNav').addEventListener('click', (e) => {
+  const stop = e.target.closest('.stop');
+  if (!stop) return;
+  const target = document.getElementById(stop.dataset.target);
+  if (target) {
+    target.open = true;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveStop(stop.dataset.target);
+  }
+});
+
+// ================= Filter =================
+function filterRows() {
+  const q = document.getElementById('fieldFilter').value.trim().toLowerCase();
+  document.querySelectorAll('details.block-card').forEach(card => {
+    let visibleCount = 0;
+    card.querySelectorAll('tr.data-row').forEach(row => {
+      const name = row.dataset.field.toLowerCase();
+      const match = !q || name.includes(q);
+      row.classList.toggle('hidden', !match);
+      if (match) visibleCount++;
+    });
+    card.style.display = (q && visibleCount === 0) ? 'none' : '';
+    if (q && visibleCount > 0) card.open = true;
+  });
+}
+
+// ================= Modal: view lookup table =================
+function buildRefButtons() {
+  const wrap = document.getElementById('refButtons');
+  wrap.innerHTML = MAP_REFERENCE.map(ref => `
+    <button type="button" class="ref-btn" onclick="openMapModal('${ref.key}')">
+      <span class="ref-dot"></span>${ref.label}
+    </button>`).join('');
+}
+
+function openMapModal(key) {
+  currentEditIdx = null;
+  const ref = MAP_REFERENCE.find(r => r.key === key);
+  if (!ref) return;
+  document.getElementById('modalTitle').textContent = ref.label + ' Lookup Table';
+  document.getElementById('modalSubtitle').textContent =
+    `Applied to the "${ref.field}" field. Matched against the field's decoded decimal value.`;
+  const rowsHtml = ref.rows.map(r => `
+    <tr><td class="mhex">${r.display}</td><td class="mhex">${r.dec}</td><td class="mname">${r.name}</td></tr>`).join('');
+  document.getElementById('modalBody').innerHTML = `
+    <table><thead>
+      <tr><th>Value (as listed)</th><th>Decimal</th><th>Meaning</th></tr>
+    </thead><tbody>${rowsHtml}</tbody></table>`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+// ================= Modal: edit field value =================
+function openEditModal(idx) {
+  currentEditIdx = idx;
+  const f = FIELD_POSITIONS[idx];
+  const slice = currentBinary.slice(f.pos, f.pos + f.len);
+  const currentDec = slice.length ? parseInt(slice, 2) : 0;
+  const maxVal = Math.pow(2, f.len) - 1;
+  const lookupRows = FIELD_LOOKUP_ROWS[f.name];
+
+  document.getElementById('modalTitle').textContent = `Edit "${f.name}"`;
+  document.getElementById('modalSubtitle').textContent = `${f.group} block \u2014 ${f.len}-bit field, valid range 0\u2013${maxVal}`;
+
+  let pickerHtml = '';
+  if (lookupRows) {
+    const options = lookupRows.map(r =>
+      `<option value="${r.dec}" ${r.dec === currentDec ? 'selected' : ''}>${r.display} (${r.dec}) \u2014 ${r.name}</option>`
+    ).join('');
+    pickerHtml = `
+      <label class="edit-field-label" for="editValueSelect">Pick from lookup table</label>
+      <select id="editValueSelect" onchange="document.getElementById('editValueInput').value=this.value">
+        <option value="">\u2014 select \u2014</option>
+        ${options}
+      </select>`;
+  }
+
+  document.getElementById('modalBody').innerHTML = `
+    ${pickerHtml}
+    <label class="edit-field-label" for="editValueInput">${lookupRows ? 'Or enter a custom decimal value' : 'New decimal value'}</label>
+    <input type="number" id="editValueInput" min="0" max="${maxVal}" value="${currentDec}">
+    <div class="edit-meta">Current binary: ${slice} &nbsp;&middot;&nbsp; Current hex: 0x${currentDec.toString(16).toUpperCase()}</div>
+    <div class="edit-warn" id="editWarn">Value out of range for this field.</div>
+    <div class="modal-footer">
+      <button onclick="saveEdit()">Save value</button>
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+    </div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('editValueInput').focus();
+}
+
+function saveEdit() {
+  if (currentEditIdx === null) return;
+  const f = FIELD_POSITIONS[currentEditIdx];
+  const input = document.getElementById('editValueInput');
+  const warn = document.getElementById('editWarn');
+  const val = parseInt(input.value, 10);
+  const maxVal = Math.pow(2, f.len) - 1;
+
+  if (isNaN(val) || val < 0 || val > maxVal) {
+    warn.classList.add('show');
+    return;
+  }
+  warn.classList.remove('show');
+
+  const newSlice = val.toString(2).padStart(f.len, '0');
+  currentBinary = currentBinary.slice(0, f.pos) + newSlice + currentBinary.slice(f.pos + f.len);
+  closeModal();
+  renderAll();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  currentEditIdx = null;
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+// ================= Parse (load fresh input) =================
+function parseHex() {
+  const statusEl = document.getElementById("status");
+  let raw = document.getElementById("hexInput").value || "";
+  let hex = raw.replace(/0x/gi, "").replace(/[^0-9A-Fa-f]/g, "");
+
+  if (hex.length === 0) {
+    statusEl.textContent = "Enter a hex string to parse.";
+    statusEl.className = "error";
+    return;
+  }
+  if (hex.length % 2 !== 0) {
+    statusEl.textContent = "Warning: odd number of hex characters \u2014 last nibble padded with 0.";
+    statusEl.className = "error";
+    hex += "0";
+  }
+
+  let binary = hexToBinary(hex);
+  let note = "";
+  if (binary.length < TOTAL_BITS) {
+    note = ` (input has ${binary.length} bits, expected ${TOTAL_BITS} \u2014 padded with trailing 0s)`;
+    binary = binary.padEnd(TOTAL_BITS, "0");
+  } else if (binary.length > TOTAL_BITS) {
+    note = ` (input has ${binary.length} bits, expected ${TOTAL_BITS} \u2014 extra trailing bits ignored)`;
+  }
+
+  statusEl.textContent =
+    `Parsed ${hex.length} hex chars \u2192 ${hexToBinary(hex).length} bits. Field map expects ${TOTAL_BITS} bits (${TOTAL_BITS/8} bytes).${note}`;
+  statusEl.className = note ? "error" : "ok";
+
+  originalBinary = binary;
+  currentBinary = binary;
+  renderAll(true);
+}
+
+// ================= Render (driven by currentBinary, called after parse OR edit) =================
+function renderAll(resetOpenState) {
+  const outputEl = document.getElementById("output");
+  const binViewEl = document.getElementById("binaryView");
+  const summaryEl = document.getElementById("summary");
+  const hexOutputEl = document.getElementById("hexOutput");
+  const modifiedBadge = document.getElementById("modifiedBadge");
+  const resetBtn = document.getElementById("resetBtn");
+  const activeStopBefore = document.querySelector('.stop.active');
+  const activeStopId = activeStopBefore ? activeStopBefore.dataset.target : "group-General";
+
+  // preserve open/closed state of each block unless this is a fresh parse
+  const openState = {};
+  if (!resetOpenState) {
+    document.querySelectorAll('details.block-card').forEach(d => openState[d.id] = d.open);
+  }
+
+  binViewEl.innerHTML = chunk(currentBinary, 8).join(" ");
+
+  const isModified = currentBinary !== originalBinary;
+  hexOutputEl.textContent = binaryToHex(currentBinary);
+  modifiedBadge.classList.toggle('show', isModified);
+  resetBtn.disabled = !isModified;
+
+  let lastGroup = null;
+  let groupRowsHtml = "";
+  let groupCount = 0;
+  let html = "";
+  const summary = {};
+
+  function flushGroup() {
+    if (lastGroup === null) return;
+    const id = slug(lastGroup);
+    html += `
+      <details class="block-card" id="${id}" ${ (openState[id] !== undefined ? openState[id] : true) ? 'open' : '' }>
+        <summary>
+          <span>${lastGroup}<span class="group-count">${groupCount} fields</span></span>
+          <span class="chevron"></span>
+        </summary>
+        <table><thead>
+          <tr><th>Field</th><th>Bits</th><th>Binary</th><th>Decimal</th><th>Hex</th><th>Decoded</th><th></th></tr>
+        </thead><tbody>${groupRowsHtml}</tbody></table>
+      </details>`;
+  }
+
+  FIELD_POSITIONS.forEach(f => {
+    if (f.group !== lastGroup) {
+      flushGroup();
+      lastGroup = f.group;
+      groupRowsHtml = "";
+      groupCount = 0;
+    }
+    const slice = currentBinary.slice(f.pos, f.pos + f.len);
+    const dec = slice.length ? parseInt(slice, 2) : 0;
+    const hx = dec.toString(16).toUpperCase().padStart(Math.ceil(f.len / 4), "0");
+    const decoded = decodeField(f.name, dec);
+    const refForField = MAP_REFERENCE.find(r => r.field === f.name);
+    const wasEdited = slice !== originalBinary.slice(f.pos, f.pos + f.len);
+
+    if (f.group === "General" && FIELD_LOOKUPS[f.name]) summary[f.name] = decoded;
+
+    groupCount++;
+    const nameCellClass = refForField ? 'fname fname-decodable' : 'fname';
+    const nameCellClick = refForField ? ` onclick="openMapModal('${refForField.key}')" title="View ${refForField.label} lookup table"` : '';
+    groupRowsHtml += `<tr class="data-row${wasEdited ? ' edited' : ''}" data-field="${f.name}">
+      <td class="${nameCellClass}"${nameCellClick}>${f.name}</td>
+      <td><span class="badge">${f.len}b</span></td>
+      <td class="bin">${slice}</td>
+      <td class="dec">${dec}</td>
+      <td class="hex">0x${hx}</td>
+      <td class="decoded ${decoded === null ? 'none' : ''}">${decoded !== null ? decoded : "\u2014"}</td>
+      <td class="edit-cell"><button class="edit-btn" onclick="openEditModal(${f.idx})" title="Edit value">&#9998;</button></td>
+    </tr>`;
+  });
+  flushGroup();
+  outputEl.innerHTML = html;
+
+  const chipDefs = [
+    ["Pass Type", summary["Product Type"]],
+    ["Line", summary["Route No."]],
+    ["Station", summary["Terminal ID / Station ID"]],
+    ["Language", summary["Language Info"]],
+    ["Last Status", summary["Transaction Status"]],
+    ["Error Code", summary["Validation/Error Code"]],
+  ];
+  summaryEl.innerHTML = chipDefs.map(([label, val]) => `
+    <div class="chip ${val ? '' : 'empty'}">
+      <div class="chip-eyebrow">${label}</div>
+      <div class="chip-value">${val || "\u2014"}</div>
+    </div>`).join("");
+
+  filterRows();
+  setActiveStop(activeStopId);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  buildRefButtons();
+  parseHex();
+});
+</script>
+</body>
+</html>
